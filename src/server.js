@@ -1,5 +1,8 @@
 const dgram = require("dgram")
 const EventEmitter = require("events")
+const db = new loki('db.db');
+
+const users = db.addCollection('connections');
 
 class Q4SServer extends EventEmitter {
   constructor() {
@@ -16,6 +19,9 @@ module.exports.createServer = function (port) {
   })
   
   upd.on('message', (msg, rinfo) => {
+    let results = users.find({ address: rinfo.address, port: rinfo.port});
+
+    
     console.log('server got: ${msg} from ${rinfo.address}:${rinfo.port}')
   })
   
