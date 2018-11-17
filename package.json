@@ -4,25 +4,26 @@
   "description": "Implementation of the Q4S client and server for node.js",
   "main": "index.js",
   "scripts": {
-    "pretest": "./node_modules/.bin/eslint ./",
+    "pretest": "./node_modules/.bin/eslint ./ --fix",
     "test": "./node_modules/mocha/bin/mocha",
     "cover": "./node_modules/.bin/istanbul cover /node_modules/mocha/bin/_mocha"
   },
   "keywords": [
     "q4s"
   ],
-  "repository" :
-  { "type" : "git", "url" : "https://github.com/frnjjq/node-q4s.git"
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/frnjjq/node-q4s.git"
   },
   "author": "Francisco José Juan Quintanilla",
   "license": "Apache-2.0",
   "devDependencies": {
-    "chai": "^4.1.2",
-    "eslint": "^4.12.1",
+    "chai": "^4.2.0",
+    "chai-as-promised": "^7.1.1",
+    "eslint": "^5.9.0",
+    "eslint-config-google": "^0.11.0",
     "istanbul": "^0.4.5",
-    "mocha": "^4.0.1"
+    "mocha": "^5.2.0"
   },
-  "dependencies": {
-    "lokijs": "^1.5.2"
-  }
+  "dependencies": {}
 }
