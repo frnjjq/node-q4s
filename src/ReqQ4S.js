@@ -63,14 +63,25 @@ module.exports = class ReqQ4S {
         this.method === 'PING')) {
         reject(new Error('Method field  does not contain a valid word.'));
       }
-      // TODO -> Si el metodo es ready tiene que estar presente la cabecera stage
-      // TODO -> If signature is present as header validate the body. usango MD5
+      if (this.method === 'READY' && typeof this.headers.stage === "undefined"){
+        reject(new Error('READY method without stage'));
+      }
+      if (typeof this.headers.signature !== "undefined"){
+        // TODO -> If signature is present as header validate the body. usango MD5
+      }      
+      if (typeof this.headers.Content-Encoding !== "undefined"){
+        reject(new Error('Body in the request is compressed'));
+      }
+      if (typeof this.headers.Content-Type === "undefined") {
+        reject(new Error('Content-Type header is not present'));
+      }
+      if (typeof this.headers.Transfer-Encoding !== "undefined" && this.headers.Transfer-Encoding !== "indentity") {
+        reject(new Error('Transfer-Encoding can only be identity'));
+      }
+
       // TODO -> Quizas deberia componar cabecera a ver si hay measurements que requiran ser incluidos.
-      // TODO -> Si me dicen que el body esta compirmido doy error
       // TODO -> Content-Type debe de estar en todas las request que se manden
       // TODO -> "Accept-Encoding" header debe de ser "identity" forzado
-      // TODO -> Si es chunqued me lo cargo
-
       if (!this.requestURI) {
         reject(new Error('Request Uri is not present in the request line.'));
       }
