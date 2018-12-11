@@ -44,10 +44,9 @@ module.exports = class Session {
     for(let flow in flows ){
       for(let end in flow ){
         for(let type in end ){
-
+          sdp = sdp + "a=flow:"+flow+" "+end+" "+type+"/"+end[type]+"\r\n"
         }
       }
-      sdp = sdp + "a=measurement:"+measurement+measurementProcedure[measurement]+"\r\n"
     }
   }
 
