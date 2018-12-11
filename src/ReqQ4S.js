@@ -1,3 +1,5 @@
+const crypto = require('crypto');
+
 module.exports = class ReqQ4S {
   /**
    * Constructor for the ReqQ4S class. Does not validate the input data.
@@ -58,35 +60,43 @@ module.exports = class ReqQ4S {
         reject(new Error('Method is not present in the request line.'));
       }
       if (!(this.method === 'BEGIN' || this.method === 'READY' ||
-        this.method === 'PING' || data.method === 'Q4S-ALERT' ||
-        this.method === 'Q4S-RECOVERY' || data.method === 'CANCEL' ||
+        this.method === 'PING' || this.method === 'Q4S-ALERT' ||
+        this.method === 'Q4S-RECOVERY' || this.method === 'CANCEL' ||
         this.method === 'PING')) {
         reject(new Error('Method field  does not contain a valid word.'));
       }
-      if (this.method === 'READY' && typeof this.headers.stage === "undefined"){
+      if (this.method === 'READY' && typeof this.headers.stage === 'undefined') {
         reject(new Error('READY method without stage'));
       }
-      if (typeof this.headers.signature !== "undefined"){
-        // TODO -> If signature is present as header validate the body. usango MD5
-      }      
-      if (typeof this.headers.Content-Encoding !== "undefined"){
+      if (!this.q4sVersion) {
+        reject(new Error('Missing parameter in the request start line'));
+      }
+      if (typeof this.headers.signature !== 'undefined') {
+        if (crypto.createHash('md5').update(this.body).digest("hex") != this.headers.signature) {
+          reject(new Error('Signature MD5 does not match the body'));
+        }
+      }
+      if (typeof this.headers["Content-Encoding"] !== 'undefined') {
         reject(new Error('Body in the request is compressed'));
       }
-      if (typeof this.headers.Content-Type === "undefined") {
+      if (typeof this.headers["Content-Type"] === 'undefined') {
         reject(new Error('Content-Type header is not present'));
       }
-      if (typeof this.headers.Transfer-Encoding !== "undefined" && this.headers.Transfer-Encoding !== "indentity") {
+      if (typeof this.headers["Transfer-Encoding"] !== 'undefined' && this.headers.Transfer-Encoding !== 'indentity') {
         reject(new Error('Transfer-Encoding can only be identity'));
       }
-
-      // TODO -> Quizas deberia componar cabecera a ver si hay measurements que requiran ser incluidos.
-      // TODO -> Content-Type debe de estar en todas las request que se manden
-      // TODO -> "Accept-Encoding" header debe de ser "identity" forzado
       if (!this.requestURI) {
         reject(new Error('Request Uri is not present in the request line.'));
       }
       resolve();
     });
+  }
+
+  /**
+   * Generate a body MD5 signature based on body.
+   */
+  signBody() {
+    this.headers.signature = crypto.createHash('md5').update(this.body).digest("hex") 
   }
   /**
    * Returns a promise with the string format of this object.
