@@ -1,18 +1,23 @@
 /**
- * Request Q4S module. Implements the Request Q4S class that allow requests manipulation.
+ * Request Q4S module. Implements the Request Q4S class that allow requests
+ * manipulation.
  * @module ReqQ4S
  */
 const crypto = require('crypto');
+require('url');
 
-/** Request Q4S class. Options to build , generate, parse and validate Q4S requests*/
+/** Request Q4S class. Options to build , generate, parse and validate Q4S
+ * requests
+ */
 class ReqQ4S {
   /**
    * Constructor for the ReqQ4S class. Does not validate input data coherence.
    * @param {string} method - The string containing the method.
-   * @param {string} requestURI - The URI of the request.
+   * @param {URL} requestURI - The URI of the request.
    * @param {string} q4sVersion - The Q4S version.
    * @param {Object} headers - Object containing all the headers.
-   * @param {string} headers.headername - One entry in the object for each header.
+   * @param {string} headers.headername - One entry in the object for each
+   * header.
    * @param {string} body - The body of the request. Normally a sdp message.
    */
   constructor(method, requestURI, q4sVersion, headers, body) {
@@ -23,23 +28,24 @@ class ReqQ4S {
     this.body = body;
   }
   /**
-   * Factory method to build a new ReqQ4S from an string. Validates the the 
+   * Factory method to build a new ReqQ4S from an string. Validates the the
    * created request object is correct.
    * @param {string} message - The mesage which has to be parsed into a ReqQ4S.
-   * @return {Object} On sucess an object of the class ReqQ4S, on error returns an error.
+   * @return {Object} On sucess an object of the class ReqQ4S, otherwise an
+   * error will be trown
    */
   static fromString(message) {
     let method; let requestURI; let q4sVersion;
     const headers = {};
 
-    const body = str.substring(str.indexOf('\r\n\r\n') + 4);
-    const headerPart = str.substring(0, str.indexOf('\r\n\r\n'));
+    const body = message.substring(message.indexOf('\r\n\r\n') + 4);
+    const headerPart = message.substring(0, message.indexOf('\r\n\r\n'));
     const headLine = headerPart.split('\r\n');
     headLine.forEach((item, index) => {
       if (index === 0) {
         const values = item.split(' ');
         method = values[0];
-        requestURI = values[1];
+        requestURI = new URL(values[1]);
         q4sVersion = values[2];
       } else {
         const header = item.split(': ');
@@ -47,57 +53,54 @@ class ReqQ4S {
       }
     });
     const req = new ReqQ4S(method, requestURI, q4sVersion, headers, body);
-    if (req.validate()) {
-      return req;
-    }
-    return new Error("Malformed request.");
+    req.validate();
+    return req;
   }
   /**
-   * Check that the data in this is correct and returns true if all is ok or 
-   * false if data is malformed. 
-   * @return {boolean} True is the data is correct. False otherwise.
+   * Check that the data in this is correct and returns true if all is ok or
+   * false if data is malformed.If there is anything malformed an error will be
+   * trown.
    */
   validate() { // TODO: Improve this comprobation when you have the class clear
-    if (!this.method) {
-      return false;
+    if (!this.q4sVersion) {
+      throw new Error('Missing an argument in the start line');
     }
     if (!(this.method === 'BEGIN' || this.method === 'READY' ||
       this.method === 'PING' || this.method === 'Q4S-ALERT' ||
       this.method === 'Q4S-RECOVERY' || this.method === 'CANCEL' ||
       this.method === 'PING')) {
-      return false;
+      throw new Error('Method field  does not contain a valid verb.');
     }
     if (this.method === 'READY' && typeof this.headers.stage === 'undefined') {
-      return false;
+      throw new Error('READY method without stage header');
     }
-    if (!this.q4sVersion) {
-      return false;
-    }
-    if (typeof this.headers.signature !== undefined) {
-      if (crypto.createHash('md5').update(this.body).digest("hex") != this.headers.signature) {
-        return false;
+    if (this.headers.signature !== undefined) {
+      if (crypto.createHash('md5').update(this.body).digest('hex') !=
+      this.headers.signature) {
+        throw new Error('Signature MD5 does not match the body.');
       }
     }
-    if (typeof this.headers["Content-Encoding"] !== undefined) {
-      return false;
+    if (this.headers['Content-Encoding'] !== undefined) {
+      throw new Error('Body in the request is compressed');
     }
-    if (typeof this.headers["Content-Type"] === undefined) {
-      return false;
+    if (this.headers['Content-Type'] === undefined) {
+      throw new Error('Content-Type header is not present');
     }
-    if (typeof this.headers["Transfer-Encoding"] !== undefined && this.headers.Transfer - Encoding !== 'indentity') {
-      return false;
+    if (this.headers['Transfer-Encoding'] !== undefined &&
+    this.headers['Transfer-Encoding'] !== 'indentity') {
+      throw new Error('Transfer-Encoding header can only be identity');
     }
-    if (!this.requestURI) {
-      return false;
-    }
-    return true;
+    return;
   }
 
   /**
-   * Introduces a new header signature in this containing the MD5 of the body of this.
+   * Introduces a new header signature in this containing the MD5 of the body
+   * of this.
    */
   signBody() {
-    this.headers.signature = crypto.createHash('md5').update(this.body).digest("hex")
+    this.headers.signature = crypto.createHash('md5')
+        .update(this.body)
+        .digest('hex');
   }
 
   /**
@@ -118,15 +121,18 @@ class ReqQ4S {
     return message;
   }
 
-    /**
+  /**
    * Static class method that allows to check whether a string is a Request.
    * it is intended for fast checking as validity is not a concern.
+   * @param {string} message - The mesage which has to be parsed to know
+   * whether it is a Request.
    * @return {boolean} -  True if it is a Response, False if it is not
    */
   static isRequest(message) {
-    const startLine = str.substring(0, message.indexOf('\r\n'));
+    const startLine = message.substring(0, message.indexOf('\r\n'));
     const values = startLine.split(' ');
-    if (parseInt(values[1], 10) !== NaN) {
+
+    if (isNaN(parseInt(values[1], 10))) {
       return true;
     }
     return false;

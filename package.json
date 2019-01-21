@@ -4,10 +4,10 @@
   "description": "Implementation of the Q4S client and server for node.js",
   "main": "index.js",
   "scripts": {
-    "pretest": "./node_modules/.bin/eslint ./ --fix",
-    "test": "./node_modules/mocha/bin/mocha",
-    "cover": "./node_modules/.bin/istanbul cover /node_modules/mocha/bin/_mocha",
-    "gendoc": "./node_modules/.bin/jsdoc -c docconf.json"
+    "lint": "./node_modules/.bin/eslint ./src --fix",
+    "test": "./node_modules/.bin/jest --coverage",
+    "gendoc": "./node_modules/.bin/jsdoc -c docconf.json",
+    "mutant": "./node_modules/.bin/stryker run"
   },
   "keywords": [
     "q4s"
@@ -19,13 +19,17 @@
   "author": "Francisco José Juan Quintanilla",
   "license": "Apache-2.0",
   "devDependencies": {
-    "chai": "^4.2.0",
-    "chai-as-promised": "^7.1.1",
     "eslint": "^5.9.0",
     "eslint-config-google": "^0.11.0",
-    "istanbul": "^0.4.5",
+    "faker": "^4.1.0",
+    "jest": "^23.6.0",
     "jsdoc": "^3.5.5",
-    "mocha": "^5.2.0"
+    "stryker": "^0.34.0",
+    "stryker-api": "^0.23.0",
+    "stryker-javascript-mutator": "^0.13.0",
+    "stryker-jest-runner": "^1.3.0"
   },
-  "dependencies": {}
+  "dependencies": {
+    "ip": "^1.1.5"
+  }
 }
