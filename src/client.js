@@ -1,65 +1,60 @@
 const EventEmitter = require('events');
-const dgram = require('dgram');
-const net = require('net');
 const req = require('ReqQ4S.js');
+const ses = require('session.js');
+const ClientNetwork = require("ClientNetwork.js")
 
-class Q4SClient extends EventEmitter{
-  constructor(options) {
+class clientQ4S extends EventEmitter {
+  constructor(clientOptions) {
     super();
 
-    this.serverTCP = net.createServer((socket) => {
-      //new socket openned
-    });
-    
-    this.serverUDP = dgram.createSocket('udp4');
-  
-    if (typeof options.portTCP === "undefined") {
-      this.serverTCP.listen();
-    }
-    else {
-      this.serverTCP.listen(options.port);
-    }
+    this.session = ses.fromOpts(clientOptions);
 
-    if(options.portUDP != undefined) {
-      this.portUDP=portUDP
-    }
-    else {
-      this.portUDP=0
-    }    
-    if(options.timeOut != undefined) {
-      this.timeOut=timeOut
-    }
-    else {
-      this.timeOut=1000
-    } 
+    this.networkHandler = new ClientNetwork();
+    this.networkHandler.on("handshakeResponse", this.handshakeHandler);
+    this.networkHandler.on("TCPResponse", this.TCPResHandler);
   }
 
-  connect(ip,port){
-    this.socket = net.createConnection({ host: ip, port: port }, () => {
-      this.emit('connect',ip,port)
-      const start= new req('BEGIN', 'URI',"Q4S");
-      this.socket.write(start.toString(),'utf8');
-    });
-
-    this.socket.on('data', (data) => {
-      const response = res.fromString(data);
-
-    });
-    this.socket.on('end', () => {
-      this.emit('end');
-    });
+  connect(ip, port) {
+    try {
+      await this.networkHandler.initHandshakeSocket(ip, port, undefined);
+    } catch (err) {
+      this.emit("error", err);
+      this.emit("close");
+      return;
+    }
+    this.networkHandler.sendHandshakeTCP(new req("BEGIN", "q4s://www.example.com", "Q4S/1.0", undefined, this.session.toSdp()));
+    return;
   }
-  destroy() {
-    this.socket.end();
+
+  handshakeHandler(res) {
+    switch (this.session.sessionState) {
+      case ses.sessionStates.UNINITIATED:
+        if (res.statusCode != 200) {
+          this.emit("error", new Error(res.reasonPhrase))
+          this.close();
+        }
+        else {
+          this.session.mergeServer(ses.fromSdp(res.body));
+          this.session.sessionState = ses.sessionStates.STABILISHED;
+          try {
+            await this.networkHandler.initQ4sSocket(this.session.addresses.serverAddress, this.session.addresses.q4sServerPorts.TCP, this.session.addresses.q4sClientPorts.TCP, this.session.addresses.q4sServerPorts.UDP, this.session.addresses.q4sClientPorts.UDP);
+          }
+          catch (err) {
+            this.emit("error", err);
+            this.close();
+          }
+          this.networkHandler.sendTCP(/* Send READY 1*/);
+        }
+        break;
+    }
+  }
+  TCPResHandler(res) {
+
   }
   close() {
-    //TODO => Send finishing verb to the server to end the session
-    this.emit('end',ip,port)
+    this.networkHandler.closeNetwork() 
+    this.emit("close");
   }
-
-  
-
-
 }
 
 module.exports = Q4SClient;
