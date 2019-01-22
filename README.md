@@ -1,6 +1,6 @@
 # node-q4s
 
-[![Build Status](https://travis-ci.org/frnjjq/node-q4s.svg?branch=master)](https://travis-ci.org/frnjjq/node-q4s)
+[![Build Status](https://travis-ci.org/frnjjq/node-q4s.svg?branch=master)](https://travis-ci.org/frnjjq/node-q4s) [![Test Coverage](https://api.codeclimate.com/v1/badges/815c07569b06770c5dc9/test_coverage)](https://codeclimate.com/github/frnjjq/node-q4s/test_coverage) [![Maintainability](https://api.codeclimate.com/v1/badges/815c07569b06770c5dc9/maintainability)](https://codeclimate.com/github/frnjjq/node-q4s/maintainability)
 
 A node.js implementation of the Q4S protocol.
 
