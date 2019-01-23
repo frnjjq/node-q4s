@@ -34,7 +34,7 @@ class clientQ4S extends EventEmitter {
           this.close();
         }
         else {
-          this.session.mergeServer(Session.fromSdp(res.body));
+          this.session.mergeServer(Session.fromSdp(res.body)); // TODO => Must be changed with the sesion implementation.
           this.session.sessionState = Session.sessionStates.STABILISHED;
           try {
             await this.networkHandler.initQ4sSocket(this.session.addresses.serverAddress, this.session.addresses.q4sServerPorts.TCP, this.session.addresses.q4sClientPorts.TCP, this.session.addresses.q4sServerPorts.UDP, this.session.addresses.q4sClientPorts.UDP);
@@ -43,16 +43,39 @@ class clientQ4S extends EventEmitter {
             this.emit("error", err);
             this.close();
           }
-          this.networkHandler.sendTCP(/* Send READY 1*/);
+          let header ={ Stage: 1};
+          header["Session-Id"] = this.session.sessionId;
+          this.networkHandler.sendTCP(new ReqQ4S("READY", "q4s://www.example.com", "Q4S/1.0", header, undefined));
         }
         break;
     }
   }
+
   TCPResHandler(res) {
-    
+    switch (this.session.sessionState) {
+      case Session.sessionStates.STABILISHED:
+      if (res.statusCode != 200) {
+        this.emit("error", new Error(res.reasonPhrase))
+        this.close();
+      }
+      else {
+        if(res.headers.Stage === "0") {
+          this.session.sessionState = Session.sessionStates.STAGE_0;
+        }
+        else if (res.headers.Stage === "1") {
+          this.session.sessionState = Session.sessionStates.STAGE_1;
+        }
+        else {
+          this.close();
+        }
+
+      }      
+      break;
+    }
   }
+
   close() {
-    this.networkHandler.closeNetwork() 
+    this.networkHandler.closeNetwork()
     this.emit("close");
   }
 }
