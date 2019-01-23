@@ -1,13 +1,13 @@
 const EventEmitter = require('events');
-const req = require('ReqQ4S.js');
-const ses = require('session.js');
+const ReqQ4S = require('ReqQ4S.js');
+const Session = require('session.js');
 const ClientNetwork = require("ClientNetwork.js")
 
 class clientQ4S extends EventEmitter {
   constructor(clientOptions) {
     super();
 
-    this.session = ses.fromOpts(clientOptions);
+    this.session = Session.fromOpts(clientOptions);
 
     this.networkHandler = new ClientNetwork();
     this.networkHandler.on("handshakeResponse", this.handshakeHandler);
@@ -22,20 +22,20 @@ class clientQ4S extends EventEmitter {
       this.emit("close");
       return;
     }
-    this.networkHandler.sendHandshakeTCP(new req("BEGIN", "q4s://www.example.com", "Q4S/1.0", undefined, this.session.toSdp()));
+    this.networkHandler.sendHandshakeTCP(new ReqQ4S("BEGIN", "q4s://www.example.com", "Q4S/1.0", undefined, this.session.toSdp()));
     return;
   }
 
   handshakeHandler(res) {
     switch (this.session.sessionState) {
-      case ses.sessionStates.UNINITIATED:
+      case Session.sessionStates.UNINITIATED:
         if (res.statusCode != 200) {
           this.emit("error", new Error(res.reasonPhrase))
           this.close();
         }
         else {
-          this.session.mergeServer(ses.fromSdp(res.body));
-          this.session.sessionState = ses.sessionStates.STABILISHED;
+          this.session.mergeServer(Session.fromSdp(res.body));
+          this.session.sessionState = Session.sessionStates.STABILISHED;
           try {
             await this.networkHandler.initQ4sSocket(this.session.addresses.serverAddress, this.session.addresses.q4sServerPorts.TCP, this.session.addresses.q4sClientPorts.TCP, this.session.addresses.q4sServerPorts.UDP, this.session.addresses.q4sClientPorts.UDP);
           }
