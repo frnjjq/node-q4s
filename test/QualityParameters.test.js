@@ -70,33 +70,6 @@ describe('QualityParameters', function () {
   });
 
   describe('updateWithSDP', function () {
-
-    const sdpCorrect =    "v=0\r\n" +
-    "o=q4s-UA 53655765 2353687637 IN IP4 192.0.2.33\r\n" +
-    "s=Q4S\r\n" +
-    "i=Q4S parameters\r\n" +
-    "t=0 0\r\n" +
-    "a=qos-level:1/2\r\n" +
-    "a=alerting-mode: Q4S-aware-network\r\n" +
-    "a=alert-pause:5000\r\n" +
-    "a=public-address:client IP4 198.51.100.51\r\n" +
-    "a=public-address:server IP4 198.51.100.58\r\n" +
-    "a=latency:40\r\n" +
-    "a=jitter:10/5\r\n" +
-    "a=bandwidth:20/6000\r\n" +
-    "a=packetloss:0.50/0.40\r\n" +
-    "a=flow:app downlink TCP/10000-20000\r\n" +
-    "a=flow:app uplink TCP/56000\r\n" +
-    "a=flow:q4s downlink UDP/55000\r\n" +
-    "a=flow:q4s downlink TCP/55001\r\n" +
-    "a=flow:q4s uplink UDP/56000\r\n" +
-    "a=flow:q4s uplink TCP/56001\r\n" +
-    "a=measurement:procedure default(50/50,50/50,5000,256/256,256/256)\r\n" +
-    "a=measurement:latency 30\r\n" +
-    "a=measurement:jitter 6/4\r\n" +
-    "a=measurement:bandwidth 200/4000\r\n" +
-    "a=measurement:packetloss 0.20/0.33";
-
     test('SDP updates the requirements', function () {
       const sdp = "a=latency:40\r\n" +
       "a=jitter:10/5\r\n" +

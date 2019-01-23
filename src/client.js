@@ -49,7 +49,7 @@ class clientQ4S extends EventEmitter {
     }
   }
   TCPResHandler(res) {
-
+    
   }
   close() {
     this.networkHandler.closeNetwork() 
