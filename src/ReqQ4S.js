@@ -2,6 +2,7 @@
  * Request Q4S module. Implements the Request Q4S class that allow requests
  * manipulation.
  * @module ReqQ4S
+ * @license Apache-2.0
  */
 const crypto = require('crypto');
 require('url');
@@ -21,10 +22,31 @@ class ReqQ4S {
    * @param {string} body - The body of the request. Normally a sdp message.
    */
   constructor(method, requestURI, q4sVersion, headers, body) {
+    /** 
+     * Method of the request.
+     * @member {String} 
+     */
     this.method = method;
+    /**
+     * The URI field of the request
+     * @member {String}
+     */
     this.requestURI = requestURI;
+    /**
+     * The version of the Q4S protocol.
+     * @member {String}
+     */
     this.q4sVersion = q4sVersion;
+    /**
+     * Object containing the headers. Each property name os the name of the
+     * header. Its value is the field.
+     * @member {Object}
+     */
     this.headers = headers;
+    /**
+     * The body of the request.
+     * @member {String}
+     */
     this.body = body;
   }
   /**
@@ -119,23 +141,6 @@ class ReqQ4S {
     message = message + '\r\n';
     message = message + this.body;
     return message;
-  }
-
-  /**
-   * Static class method that allows to check whether a string is a Request.
-   * it is intended for fast checking as validity is not a concern.
-   * @param {string} message - The mesage which has to be parsed to know
-   * whether it is a Request.
-   * @return {boolean} -  True if it is a Response, False if it is not
-   */
-  static isRequest(message) {
-    const startLine = message.substring(0, message.indexOf('\r\n'));
-    const values = startLine.split(' ');
-
-    if (isNaN(parseInt(values[1], 10))) {
-      return true;
-    }
-    return false;
   }
 };
 

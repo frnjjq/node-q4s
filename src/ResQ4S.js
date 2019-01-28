@@ -1,8 +1,37 @@
 /**
- * Response Q4S module. Implements the Response Q4S class that allow response
- * manipulation.
+ * Response Q4S module. Implements the Response Q4S class that implements 
+ * response logic and manipulation.
  * @module ResQ4S
+ * @license Apache-2.0
  */
+
+/**
+ * An enumerator which defines the reason phrase for each of the error
+ * codes that a response may contain.
+ */
+const reasonPhrases = Object.freeze({
+  100: "Trying",
+  200: "Ok",
+  400: "Bad Request",
+  404: "Not Found",
+  405: "Method Not Allowed",
+  406: "Not Acceptable",
+  408: "Request Timeout",
+  413: "Request Entity Too Large",
+  414: "Request-URI Too Long",
+  415: "Unsoported Media Type",
+  416: "Unsoported URI Scheme",
+  500: "Server Internal Error",
+  501: "Not Implemented",
+  503: "Service Unavailable",
+  504: "Server Time-out",
+  505: "Version Not Supported",
+  513: "Message Too Large",
+  600: "Session Does Not Exist",
+  601: "Quality Level Not Allowed",
+  603: "Session not Allowed",
+  604: "Authorization Nor Allowed",
+});
 
 /**
  * Response Q4S class. Options to build , generate, parse and validate Q4S
@@ -20,10 +49,31 @@ class ResQ4S {
    * @param {string} body - The body of the request. Normally a sdp message.
    */
   constructor(q4sVersion, statusCode, reasonPhrase, headers, body) {
+    /**
+     * The Q4S protocol version
+     * @member {String}
+     * */
     this.q4sVersion = q4sVersion;
+    /**
+     * The status code
+     * @member {Number}
+     * */
     this.statusCode = statusCode;
+    /**
+     * String containing a human redable reasoning of the error code.
+     * @member {String}
+     * */
     this.reasonPhrase = reasonPhrase;
+    /**
+     * Object containing the headers. Each property name os the name of the
+     * header. Its value is the field.
+     * @member {Object}
+     */
     this.headers = headers;
+    /**
+     * The body of the response.
+     * @member {String}
+     */
     this.body = body;
   }
   /**
@@ -86,21 +136,6 @@ class ResQ4S {
     message = message + '\r\n';
     message = message + this.body;
     return message;
-  }
-
-  /**
-   * Static class method that allows to check whether a string is a Response.
-   * it is intended for fast checking as validity is not a concern.
-   * @param {string} message - The mesage which has to be checked.
-   * @return {boolean} -  True if it is a Response, False if it is not
-   */
-  static isResponse(message) {
-    const startLine = message.substring(0, message.indexOf('\r\n'));
-    const values = startLine.split(' ');
-    if (isNaN(parseInt(values[1], 10))) {
-      return false;
-    }
-    return true;
   }
 };
 
