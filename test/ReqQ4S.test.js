@@ -1,6 +1,6 @@
 const crypto = require('crypto');
 const faker = require('faker');
-const URL = require('url');
+const url = require('url');
 
 const ReqQ4S = require('../src/ReqQ4S.js');
 

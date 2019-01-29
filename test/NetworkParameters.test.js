@@ -46,23 +46,23 @@ describe('NetworkParameters', function() {
   describe('addresesToSDP', function() {
     test('work properly', function() {
       const netP = new NetworkParameters('IP4', '198.51.100.51', 'IP4', '198.51.100.58', {TCP: 1, UDP: 2}, {TCP: 1, UDP: 2}, {TCP: 3, UDP: 4}, {TCP: 5, UDP: 6});
-      const result = 'a=public-address:client IP4 198.51.100.51'+
-      'a=public-address:server IP4 198.51.100.58';
+      const result = 'a=public-address:client IP4 198.51.100.51\r\n'+
+      'a=public-address:server IP4 198.51.100.58\r\n';
       expect(netP.addresesToSDP()).toEqual(result);
     });
   });
   describe('flowsToSDP', function() {
     test('work properly', function() {
-      const netP = new NetworkParameters('IP4', '198.51.100.51', 'IP4', '198.51.100.58', {TCP: 1, UDP: 2}, {TCP: 1, UDP: 2}, {TCP: 3, UDP: 4}, {TCP: 5, UDP: 6});
-      const result = 'a=flow:app clientListeningPort TCP/5'+
-      'a=flow:app clientListeningPort UDP/6'+
-      'a=flow:app serverListeningPort TCP/7'+
-      'a=flow:app serverListeningPort UDP/8'+
-      'a=flow:q4s clientListeningPort UDP/2'+
-      'a=flow:q4s clientListeningPort TCP/1'+
-      'a=flow:q4s serverListeningPort UDP/4'+
-      'a=flow:q4s serverListeningPort TCP/3';
-      expect(netP.addresesToSDP()).toEqual(result);
+      const netP = new NetworkParameters('IP4', '198.51.100.51', 'IP4', '198.51.100.58', {TCP: 1, UDP: 2}, {TCP: 3, UDP: 4}, {TCP: 5, UDP: 6}, {TCP: 7, UDP: 8});
+      const result = 'a=flow:app clientListeningPort TCP/5\r\n'+
+      'a=flow:app clientListeningPort UDP/6\r\n'+
+      'a=flow:app serverListeningPort TCP/7\r\n'+
+      'a=flow:app serverListeningPort UDP/8\r\n'+
+      'a=flow:q4s clientListeningPort TCP/1\r\n'+
+      'a=flow:q4s clientListeningPort UDP/2\r\n'+
+      'a=flow:q4s serverListeningPort TCP/3\r\n'+
+      'a=flow:q4s serverListeningPort UDP/4\r\n';
+      expect(netP.flowsToSDP()).toEqual(result);
     });
   });
 });
