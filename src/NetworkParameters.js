@@ -2,80 +2,98 @@
  * Network parameters Q4S module. Implements storing and updating for network
  * parameters of a Q4S session.
  * @module NetworkParameters
+ * @license Apache-2.0
  */
-
-const ip = require('ip');
 
 /** Network Parameters Class*/
 class NetworkParameters {
   /**
   * Constructor for the QualityParameters class. Does not validate input data
   * coherence.
-  * @param {number} clientAddressType - The maximum latency allowed by the
-  * session.
-  * @param {string} clientAddress - The maximum jitter allowed by the session
-  * in the uplink.
-  * @param {number} serverAddressType - The maximum jitter allowed by the
-  * session in the downlink.
-  * @param {number} serverAddress - The minimum bandwidth allowed by the
-  * session in the uplink.
-  * @param {Object} q4sClientPorts - The minimum bandwidth allowed by the
-  * session in the downlink.
+  * @param {number} clientAddressType - Ip version of the client
+  * @param {string} clientAddress - Ip of the client.
+  * @param {number} serverAddressType - Ip version of the server.
+  * @param {number} serverAddress - Ip of the server
+  * @param {Object} q4sClientPorts - Ports opened for Q4S communication at client 
+  * side
   * @param {Number} q4sClientPorts.TCP
   * @param {Number} q4sClientPorts.UDP
-  * @param {Object} q4sServerPorts - The minimum bandwidth allowed by the
-  * session in the downlink.
+  * @param {Object} q4sServerPorts - Ports opened for Q4S communication at server 
+  * side
   * @param {Number} q4sServerPorts.TCP
   * @param {Number} q4sServerPorts.UDP
-  * @param {Object} appClientPorts - The minimum bandwidth allowed by the
-  * session in the downlink.
+  * @param {Object} appClientPorts - Ports opened for app communication at client 
+  * side
   * @param {String} appClientPorts.TCP
   * @param {String} appClientPorts.UDP
-  * @param {Object} appServerPorts - The minimum bandwidth allowed by the
-  * session in the downlink.
+  * @param {Object} appServerPorts - Ports opened for app communication at server 
+  * side
   * @param {String} appServerPorts.TCP
   * @param {String} appServerPorts.UDP
   */
   constructor(clientAddressType, clientAddress, serverAddressType,
     serverAddress, q4sClientPorts, q4sServerPorts, appClientPorts,
     appServerPorts) {
+    /**
+     * Ip version of the client.
+     * @member {Number}
+     */
     this.clientAddressType = clientAddressType;
+    /**
+     * Client IP
+     * @member {String}
+     */
     this.clientAddress = clientAddress;
+    /**
+     * Ip version of the server.
+     * @member {Number}
+     */
     this.serverAddressType = serverAddressType;
+    /**
+     * Server IP
+     * @member {String}
+     */
     this.serverAddress = serverAddress;
     if (!q4sClientPorts){
+      /**
+       * Opened ports for the client q4s  cumunication
+       * @member {Object}
+       */
       this.q4sClientPorts = {};
     }
     else {
       this.q4sClientPorts = q4sClientPorts;
     }
      if (!q4sServerPorts){
+      /**
+       * Opened ports for the server q4s cumunication
+       * @member {Object}
+       */
       this.q4sServerPorts = {};
     }
     else {
       this.q4sServerPorts = q4sServerPorts;
     }  
     if (!appClientPorts){
+      /**
+       * Opened ports for the client app cumunication
+       * @member {Object}
+       */
       this.appClientPorts = {};
     }
     else {
       this.appClientPorts = appClientPorts;
     }   
     if (!appServerPorts){
+      /**
+       * Opened ports for the server app cumunication
+       * @member {Object}
+       */
       this.appServerPorts = {};
     }
     else {
       this.appServerPorts = appServerPorts;
     }    
-  }
-
-  /**
-   * Returns an object containing your publicIp and type.Use it to introduce
-   *  info into this object.
-   * @return {String} - The string representation of the Ip.
-   */
-  static getMyPublicIp() {
-    return ip.address();
   }
 
   /**

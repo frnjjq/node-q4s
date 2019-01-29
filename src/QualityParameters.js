@@ -1,7 +1,8 @@
 /**
- * Quality parameters Q4S module. Implements storing and updating for quility
- * parameters of a session.
+ * Quality parameters Q4S module.Represents a set of quality measures or 
+ * constrains.
  * @module QualityParameters
+ * @license Apache-2.0
  */
 
 /** Quality Parameters Class*/
@@ -25,32 +26,47 @@ class QualityParameters {
    * allowed by the session in the downlink.
    */
   constructor(latency, jitterUp, jitterDown, bandwidthUp, bandwidthDown,
-      packetlossUp, packetlossDown) {
+    packetlossUp, packetlossDown) {
+    /**
+     * The maximum RTT latency allowed by the session.
+     * @member {Number}
+     */
     this.latency = latency;
+    /**
+     * The maximum jitter allowed by the session in the uplink.
+     * @member {Number}
+     */
     this.jitterUp = jitterUp;
+    /**
+     * The maximum jitter allowed by the session in the downlink.
+     * @member {Number}
+     */
     this.jitterDown = jitterDown;
+    /**
+     * The minimum bandwidth allowed by the session in the uplink.
+     * @member {Number}
+     */
     this.bandwidthUp = bandwidthUp;
+    /**
+     * The minimum bandwidth allowed by the session in the downlink.
+     * @member {Number}
+     */
     this.bandwidthDown = bandwidthDown;
+    /**
+     * The maximum packet loss allowed by the session in the uplink.
+     * @member {Number}
+     */
     this.packetlossUp = packetlossUp;
+    /**
+     * The maximum packet loss allowed by the session in the downlink.
+     * @member {Number}
+     */
     this.packetlossDown = packetlossDown;
   }
+
   /**
-   * Checks whether a given measurement fullfill the quality parameters.
-   * @param {Object} measurement - Object containing the measurements.
-   * @param {(number|undefined)} measurement.latency - The measured RTT
-   * latency.
-   * @param {(number|undefined)} measurement.jitterUp - The measured jitter
-   * in the uplink .
-   * @param {(number|undefined)} measurement.jitterDown - The measured jitter
-   * in the downlink.
-   * @param {(number|undefined)} measurement.bandwidthUp - The measured
-   * bandwidth in the uplink.
-   * @param {(number|undefined)} measurement.bandwidthDown - The measured
-   * bandwidth in the downlink.
-   * @param {(number|undefined)} measurement.packetlossUp - The measured packet
-   * loss in the uplink.
-   * @param {(number|undefined)} measurement.packetlossDown - The measured
-   * packet loss in the downlink.
+   * Given another instance of Quality parameters check those measures against te ones stored here.
+   * @param {QualityParameters} measurement - Object containing the measurements.
    * @return {bool} True if the requirements where fullfilled false otherwise
    */
   doesMetQuality(measurement) {
@@ -140,17 +156,39 @@ class QualityParameters {
     }
     if (this.jitterDown && this.jitterUp) {
       lines = lines + 'a=jitter:' + this.jitterUp + '/' +
-      this.jitterDown + '\r\n';
+        this.jitterDown + '\r\n';
     }
     if (this.bandwidthUp && this.bandwidthDown) {
       lines = lines + 'a=bandwidth:' + this.bandwidthUp + '/' +
-      this.bandwidthDown + '\r\n';
+        this.bandwidthDown + '\r\n';
     }
     if (this.packetlossUp && this.packetlossDown) {
       lines = lines + 'a=packetloss:' + this.packetlossUp + '/' +
-      this.packetlossDown + '\r\n';
+        this.packetlossDown + '\r\n';
     }
     return lines;
+  }
+  /**
+   * Integrate into this object the measures from the client.
+   * @return {Measurement} The taken measures from client.
+   */
+  introduceClientMeasures(measure) {
+    latency, jitter, bandwidth, packetLoss
+    if (!this.latency) {
+      this.latency = measure.latency;
+    }
+    this.jitterUp = measure.jitter;
+    this.packetlossUp = measure.packetLoss;
+  }
+    /**
+   * Integrate into this object the measures from the server.
+   * @return {Measurement} The taken measures from server.
+   */
+  introduceServerMeasures(measure) {
+    latency, jitter, bandwidth, packetLoss
+    this.latency = measure.latency;
+    this.jitterDown = measure.jitter;
+    this.packetlossDown = measure.packetLoss;
   }
 }
 

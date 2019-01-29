@@ -8,45 +8,70 @@ const EventEmitter = require('events');
 const net = require('net');
 const util = require('util');
 
+
 const res = require('ResQ4S.js');
 const req = require('ReqQ4S.js');
+const utilQ4S = require('Util.js');
 
 const connectPromised = util.promisify(net.Socket.connect);
 const bindPromised = util.promisify(dgram.Socket.bind);
 
 /** Network layer class. It emmits events for each recieved message. Implements
- *  functions to send messages over the network*/
+ *  functions to send messages over the network
+ * @extends EventEmitter
+ * @fires ClientNetwork#handshakeResponse
+ * @fires ClientNetwork#TCPResponse
+ * @fires ClientNetwork#TCPRequest
+ * @fires ClientNetwork#UDPResponse
+ * @fires ClientNetwork#UDPRequest
+ * @fires ClientNetwork#error
+ */
 class ClientNetwork extends EventEmitter {
   /** Constructor for the ClientNetwork. Only inicialices the super class. */
   constructor() {
     super();
+    /**
+     * The handshake socket.
+     * @member {net.Socket}
+     */
     this.handshakeSocket = new net.Socket();
     this.handshakeSocket.connectPromised = connectPromised;
     this.handshakeSocket.on('data', (data) => {
       this.emit('handshakeResponse', res.fromString(data));
     });
     this.handshakeSocket.on('error', (err) => {
-      this.closeNetwork();
+      this.closeHandshake();
       this.emit('error', err);
     });
-
+    /**
+     * The TCP Q4S socket.
+     * @member {net.Socket}
+     */
     this.TCPSocket = new net.Socket();
     this.TCPSocket.connectPromised = connectPromised;
     this.TCPSocket.on('data', (data) => {
-      this.emit('TCPResponse', res.fromString(data));
+      if (utilQ4S.isRequest(data)) {
+        this.emit('TCPRequest', req.fromString(data));
+      } else {
+        this.emit('TCPResponse', res.fromString(data));
+      }
     });
     this.TCPSocket.on('error', (err) => {
       this.closeNetwork();
       this.emit('error', err);
     });
-
+    /**
+     * The UDP Q4S socket.
+     * @member {dgram.Socket}
+     */
     this.UDPSocket = dgram.createSocket('udp4');
     this.UDPSocket.bindPromised = bindPromised;
     this.UDPSocket.on('message', (msg, rinfo) => {
-      if (res.isResponse(msg)) {
-        this.emit('UDPResponse', res.fromString(msg));
+      const now = new Date();
+      if (res.isRequest(msg)) {
+        this.emit('UDPRequest', req.fromString(msg), now);
       } else {
-        this.emit('UDPRequest', req.fromString(msg));
+        this.emit('UDPResponse', res.fromString(msg), now);
       }
     });
     this.UDPSocket.on('error', (err) => {
@@ -120,9 +145,9 @@ class ClientNetwork extends EventEmitter {
    */
   sendUDP(msg) {
     this.UDPSocket.send(
-        msg.toString(),
-        this.UDPSocketOps.port,
-        this.UDPSocketOps.host
+      msg.toString(),
+      this.UDPSocketOps.port,
+      this.UDPSocketOps.host
     );
     return;
   }
@@ -134,5 +159,12 @@ class ClientNetwork extends EventEmitter {
     this.TCPSocket.end();
     this.UDPSocket.close();
   }
+  /**
+   * Close the handshake socket.
+   */
+  closeHandshake() {
+    this.handshakeSocket.end();
+  }
+
 }
 module.exports = ClientNetwork;
