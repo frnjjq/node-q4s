@@ -26,7 +26,7 @@ class Session {
    * @param {NetworkParameters} addresses - The IP version of the client
    * address.
    * @param {QualityParameters} quality - The client IP address.
-   * @param {MeasurementParameters} measurement - The client IP address.
+   * @param {MeasurementProcedure} measurement - The client IP address.
    */
   constructor(qosLevelUp, qosLevelDown, alertingMode, alertPause,
       recoveryPause, sessionState, SessionId, addresses, quality,
