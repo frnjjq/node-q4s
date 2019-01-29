@@ -4,7 +4,8 @@
   "description": "Implementation of the Q4S client and server for node.js",
   "main": "index.js",
   "scripts": {
-    "lint": "./node_modules/.bin/eslint ./src --fix",
+    "lint": "./node_modules/.bin/eslint ./src ",
+    "lintfix": "./node_modules/.bin/eslint ./src --fix",
     "test": "./node_modules/.bin/jest --coverage",
     "gendoc": "./node_modules/.bin/jsdoc -c docconf.json"
   },

@@ -4,7 +4,7 @@
  * @module Session
  */
 
-const MeasurementParameters = require('MeasurementParameters.js');
+const MeasurementProcedure = require('MeasurementProcedure.js');
 const NetworkParameters = require('NetworkParameters.js');
 const QualityParameters = require('QualityParameters.js');
 
@@ -20,16 +20,16 @@ class Session {
    * this session.
    * @param {number} alertPause - Alert pause value, number of miliseconds
    * between Alert q4s messages.
+   * @param {Number} recoveryPause - Number of miliseconds to wait.
    * @param {number} sessionState - The State of the current session
-   * @param {number} sessionId - The session Id of this session.
-   * //TODO => May need more things here to be honest
+   * @param {number} id - The session Id of this session.
    * @param {NetworkParameters} addresses - The IP version of the client
    * address.
    * @param {QualityParameters} quality - The client IP address.
    * @param {MeasurementProcedure} measurement - The client IP address.
    */
   constructor(qosLevelUp, qosLevelDown, alertingMode, alertPause,
-      recoveryPause, sessionState, SessionId, addresses, quality,
+      recoveryPause, sessionState, id, addresses, quality,
       measurement) {
     this.qosLevelUp = qosLevelUp;
     this.qosLevelDown = qosLevelDown;
@@ -40,7 +40,7 @@ class Session {
     this.addresses = addresses;
     this.quality = quality;
     this.measurement = measurement;
-    this.sessionId = SessionId;
+    this.id = id;
   }
   /**
    * Factory static method to generate a new session from an SDP.
@@ -94,7 +94,7 @@ class Session {
           serverPublicAddressType = line.substring(24, 27);
           serverPublicAddress = line.substring(28);
         } else if (line.indexOf('a=measurement:procedure') === 0) {
-          measurement = measPrmt.fromSDPline(line.substring(24));
+          measurement = MeasurementProcedure.fromSDPline(line.substring(24));
         } else if (line.indexOf('a=latency:') === 0) {
           latency = line.substring(10);
         } else if (line.indexOf('a=jitter:') === 0) {
@@ -194,7 +194,11 @@ class Session {
     return sdp;
   }
 
-
+  /**
+   * Creates a session from the options passed-
+   * @argument {Object} options - Options
+   * @return {Session} -  A new session
+   */
   static fromClientOps(options) {
     const qosLevelUp = 0;
     const qosLevelDown = 0;
@@ -276,6 +280,7 @@ const sessionStates = Object.freeze({
  * A constant object that exports the two alerting modes that can be possible
  * in a session
  */
+module.exports = Session;
 module.exports.alertTypes = alertTypes;
 module.exports.sessionStates = sessionStates;
-module.exports = Session;
+

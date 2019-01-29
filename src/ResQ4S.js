@@ -1,36 +1,38 @@
 /**
- * Response Q4S module. Implements the Response Q4S class that implements 
+ * Response Q4S module. Implements the Response Q4S class that implements
  * response logic and manipulation.
  * @module ResQ4S
  * @license Apache-2.0
  */
 
+const Util = require('./Util');
+
 /**
  * An enumerator which defines the reason phrase for each of the error
  * codes that a response may contain.
  */
-const reasonPhrases = Object.freeze({
-  100: "Trying",
-  200: "Ok",
-  400: "Bad Request",
-  404: "Not Found",
-  405: "Method Not Allowed",
-  406: "Not Acceptable",
-  408: "Request Timeout",
-  413: "Request Entity Too Large",
-  414: "Request-URI Too Long",
-  415: "Unsoported Media Type",
-  416: "Unsoported URI Scheme",
-  500: "Server Internal Error",
-  501: "Not Implemented",
-  503: "Service Unavailable",
-  504: "Server Time-out",
-  505: "Version Not Supported",
-  513: "Message Too Large",
-  600: "Session Does Not Exist",
-  601: "Quality Level Not Allowed",
-  603: "Session not Allowed",
-  604: "Authorization Nor Allowed",
+const REASON_PHRASES = Object.freeze({
+  100: 'Trying',
+  200: 'Ok',
+  400: 'Bad Request',
+  404: 'Not Found',
+  405: 'Method Not Allowed',
+  406: 'Not Acceptable',
+  408: 'Request Timeout',
+  413: 'Request Entity Too Large',
+  414: 'Request-URI Too Long',
+  415: 'Unsoported Media Type',
+  416: 'Unsoported URI Scheme',
+  500: 'Server Internal Error',
+  501: 'Not Implemented',
+  503: 'Service Unavailable',
+  504: 'Server Time-out',
+  505: 'Version Not Supported',
+  513: 'Message Too Large',
+  600: 'Session Does Not Exist',
+  601: 'Quality Level Not Allowed',
+  603: 'Session not Allowed',
+  604: 'Authorization Nor Allowed',
 });
 
 /**
@@ -75,6 +77,24 @@ class ResQ4S {
      * @member {String}
      */
     this.body = body;
+  }
+  /**
+   * Factory method to build a new ResQ4S abstracting part of the details.
+   * @param {number} statusCode - The status code of the response
+   * @param {Object} headers - Object containing all the headers.
+   * @param {string} headers.headername - One entry in the object for each
+   * header.
+   * @param {string} body - The body of the request. Normally a sdp message.
+   * returns an error.
+   * @return {ResQ4SQ}
+   */
+  genRes(statusCode, headers, body) {
+    return new ResQ4S(
+        Util.Q4SVERSION,
+        statusCode,
+        REASON_PHRASES[statusCode],
+        headers,
+        body);
   }
   /**
    * Factory method to build a new ResQ4S from an string. Validates the the

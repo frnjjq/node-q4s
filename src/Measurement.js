@@ -1,12 +1,19 @@
 /**
- * Module which implements the class Measurement which includes the four 
+ * Module which implements the class Measurement which includes the four
  * parameters that are measured in Q4S.
  * @module Measurement
  */
 
 /** Measurement Class*/
 class Measurement {
+  /**
+   * Constructor for the Measurement.
+   * @param {string} latency - Latency in ms
+   * @param {URL} jitter - Jitter in ms
+   * @param {string} bandwidth - bandwidth in ms
+   * @param {Object} packetLoss - packetLoss
 
+   */
   constructor(latency, jitter, bandwidth, packetLoss) {
     this.latency = latency;
     this.jitter = jitter;
@@ -14,9 +21,9 @@ class Measurement {
     this.packetLoss = packetLoss;
   }
 
-    /**
+  /**
    * Extract the text view of this object to be included in headers.
-   * @returns {String} The header representation of tose measurements.
+   * @return {String} The header representation of tose measurements.
    */
   toHeader() {
     return `l=${this.latency}`+
@@ -30,30 +37,27 @@ class Measurement {
    * @param {String} hdr - Header line to extract the text from.
    */
   fromHeader(hdr) {
-    let parts = hdt.split(",");
+    const parts = hdt.split(',');
     parts.array.forEach((element) => {
-      let index, value;
-      if (index = element.indexOf("l=")){
+      let index; let value;
+      if (index = element.indexOf('l=')) {
         value = parseInt(element.substring(index+2), 10);
-        if (!isNaN(value)){
+        if (!isNaN(value)) {
           this.latency = value;
         }
-      }
-      else if(index = element.indexOf("j=")) {
+      } else if (index = element.indexOf('j=')) {
         value = parseInt(element.substring(index+2), 10);
-        if (!isNaN(value)){
+        if (!isNaN(value)) {
           this.jitter = value;
         }
-      }
-      else if (index = element.indexOf("pl=")) {
+      } else if (index = element.indexOf('pl=')) {
         value = parseInt(element.substring(index+3), 10);
-        if (!isNaN(value)){
+        if (!isNaN(value)) {
           this.packetLoss = value;
         }
-      }
-      else if (index = element.indexOf("bw=")) {
+      } else if (index = element.indexOf('bw=')) {
         value = parseInt(element.substring(index+3), 10);
-        if (!isNaN(value)){
+        if (!isNaN(value)) {
           this.bandwidth = value;
         }
       }
@@ -69,28 +73,28 @@ class Measurement {
    */
   fillJitter(reqTime) {
     let jitAcum = 0;
-    let jitSize = 0
+    let jitSize = 0;
     for (let i = 1; i < reqTime.lenght; i++) {
       if (reqTime[i] != 0 && reqTime[i - 1] != 0) {
         jitAcum = jitAcum + reqTime[i] - reqTime[i - 1];
         jitSize++;
       }
     }
-    this.jitter =  jitAcum/jitSize;
+    this.jitter = jitAcum/jitSize;
   }
   /**
-   * Fill the packet loss and latency attribute with an Array of dates. Those 
-   * dates are thedeparture of the packet and the time of ariva of the corresponding response. The array is expected to be filled with zeroes
+   * Fill the packet loss and latency attribute with an Array of dates. Those
+   * dates are thedeparture of the packet and the time of ariva of the
+   * corresponding response. The array is expected to be filled with zeroes
    * in the empty spaces thata re not used. The lenght considered is up to the
    * last not zero value.
    * @param {Date[]} departureTime - The sending times
    * @param {Date[]} arrivalTime - The response arrival times
    */
   fromReady0Array(departureTime, arrivalTime) {
-
     const originalSize = 0;
-    for(let i=0 ; i < arrivalTime; i++) {
-      if(arrivalTime[i] !== 0){
+    for (let i=0; i < arrivalTime; i++) {
+      if (arrivalTime[i] !== 0) {
         originalSize = i+1;
       }
     }
@@ -104,9 +108,11 @@ class Measurement {
     this.packetLoss = departureTime.lenght / originalSize;
 
     const diff = departureTime.map((value, i) => {
-      return (arrivalTime[i] - value) / 2
+      return (arrivalTime[i] - value) / 2;
     });
-    this.measurements.latency = diff.reduce((prev, next) => prev + next) / departureTime.lenght; 
+    this.measurements.latency = diff.reduce((prev, next) => prev + next)
+    / departureTime.lenght;
   }
-  
 }
+
+module.exports = Measurement;

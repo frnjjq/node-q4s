@@ -8,32 +8,32 @@
 /** Network Parameters Class*/
 class NetworkParameters {
   /**
-  * Constructor for the QualityParameters class. Does not validate input data
-  * coherence.
-  * @param {number} clientAddressType - Ip version of the client
-  * @param {string} clientAddress - Ip of the client.
-  * @param {number} serverAddressType - Ip version of the server.
-  * @param {number} serverAddress - Ip of the server
-  * @param {Object} q4sClientPorts - Ports opened for Q4S communication at client 
-  * side
-  * @param {Number} q4sClientPorts.TCP
-  * @param {Number} q4sClientPorts.UDP
-  * @param {Object} q4sServerPorts - Ports opened for Q4S communication at server 
-  * side
-  * @param {Number} q4sServerPorts.TCP
-  * @param {Number} q4sServerPorts.UDP
-  * @param {Object} appClientPorts - Ports opened for app communication at client 
-  * side
-  * @param {String} appClientPorts.TCP
-  * @param {String} appClientPorts.UDP
-  * @param {Object} appServerPorts - Ports opened for app communication at server 
-  * side
-  * @param {String} appServerPorts.TCP
-  * @param {String} appServerPorts.UDP
-  */
+   * Constructor for the QualityParameters class. Does not validate input data
+   * coherence.
+   * @param {number} clientAddressType - Ip version of the client
+   * @param {string} clientAddress - Ip of the client.
+   * @param {number} serverAddressType - Ip version of the server.
+   * @param {number} serverAddress - Ip of the server
+   * @param {Object} q4sClientPorts - Ports opened for Q4S communication at
+   * client side
+   * @param {Number} q4sClientPorts.TCP
+   * @param {Number} q4sClientPorts.UDP
+   * @param {Object} q4sServerPorts - Ports opened for Q4S communication at
+   * server side
+   * @param {Number} q4sServerPorts.TCP
+   * @param {Number} q4sServerPorts.UDP
+   * @param {Object} appClientPorts - Ports opened for app communication at
+   * client side
+   * @param {String} appClientPorts.TCP
+   * @param {String} appClientPorts.UDP
+   * @param {Object} appServerPorts - Ports opened for app communication at
+   * server side
+   * @param {String} appServerPorts.TCP
+   * @param {String} appServerPorts.UDP
+   */
   constructor(clientAddressType, clientAddress, serverAddressType,
-    serverAddress, q4sClientPorts, q4sServerPorts, appClientPorts,
-    appServerPorts) {
+      serverAddress, q4sClientPorts, q4sServerPorts, appClientPorts,
+      appServerPorts) {
     /**
      * Ip version of the client.
      * @member {Number}
@@ -54,46 +54,42 @@ class NetworkParameters {
      * @member {String}
      */
     this.serverAddress = serverAddress;
-    if (!q4sClientPorts){
+    if (!q4sClientPorts) {
       /**
        * Opened ports for the client q4s  cumunication
        * @member {Object}
        */
       this.q4sClientPorts = {};
-    }
-    else {
+    } else {
       this.q4sClientPorts = q4sClientPorts;
     }
-     if (!q4sServerPorts){
+    if (!q4sServerPorts) {
       /**
        * Opened ports for the server q4s cumunication
        * @member {Object}
        */
       this.q4sServerPorts = {};
-    }
-    else {
+    } else {
       this.q4sServerPorts = q4sServerPorts;
-    }  
-    if (!appClientPorts){
+    }
+    if (!appClientPorts) {
       /**
        * Opened ports for the client app cumunication
        * @member {Object}
        */
       this.appClientPorts = {};
-    }
-    else {
+    } else {
       this.appClientPorts = appClientPorts;
-    }   
-    if (!appServerPorts){
+    }
+    if (!appServerPorts) {
       /**
        * Opened ports for the server app cumunication
        * @member {Object}
        */
       this.appServerPorts = {};
-    }
-    else {
+    } else {
       this.appServerPorts = appServerPorts;
-    }    
+    }
   }
 
   /**
@@ -130,27 +126,29 @@ class NetworkParameters {
   }
 
   /**
-   * Return an string representation of tthe addreses contained within this object.
+   * Return an string representation of tthe addreses contained within this
+   * object.
    * @return {String} - The String representation of this object.
    */
   addresesToSDP() {
-    const sdp = "";
+    let sdp = '';
     if (this.clientAddress) {
       sdp = sdp + 'a=public-address:client ' + this.clientAddressType +
         ' ' + this.clientAddress + '\r\n';
     }
     if (this.serverAddress) {
-      sdp = sdp + 'a=public-address:server ' + this.addresses.serverAddressType +
+      sdp = sdp + 'a=public-address:server ' + this.serverAddressType +
         ' ' + this.serverAddress + '\r\n';
     }
     return sdp;
   }
   /**
- * Return an string representation of tthe flow ports contained within this object.
- * @return {String} - The String representation of this object.
- */
+   * Return an string representation of tthe flow ports contained within this
+   * object.
+   * @return {String} - The String representation of this object.
+   */
   flowsToSDP() {
-    let sdp = "";
+    let sdp = '';
     if (this.appClientPorts.TCP) {
       sdp = sdp + 'a=flow:app clientListeningPort TCP/' +
         this.appClientPorts.TCP + '\r\n';

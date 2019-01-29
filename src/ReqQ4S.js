@@ -7,7 +7,8 @@
 const crypto = require('crypto');
 require('url');
 
-/** Request Q4S class. Options to build , generate, parse and validate Q4S
+/**
+ * Request Q4S class. Options to build , generate, parse and validate Q4S
  * requests
  */
 class ReqQ4S {
@@ -22,9 +23,9 @@ class ReqQ4S {
    * @param {string} body - The body of the request. Normally a sdp message.
    */
   constructor(method, requestURI, q4sVersion, headers, body) {
-    /** 
+    /**
      * Method of the request.
-     * @member {String} 
+     * @member {String}
      */
     this.method = method;
     /**

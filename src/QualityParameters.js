@@ -1,5 +1,5 @@
 /**
- * Quality parameters Q4S module.Represents a set of quality measures or 
+ * Quality parameters Q4S module.Represents a set of quality measures or
  * constrains.
  * @module QualityParameters
  * @license Apache-2.0
@@ -26,7 +26,7 @@ class QualityParameters {
    * allowed by the session in the downlink.
    */
   constructor(latency, jitterUp, jitterDown, bandwidthUp, bandwidthDown,
-    packetlossUp, packetlossDown) {
+      packetlossUp, packetlossDown) {
     /**
      * The maximum RTT latency allowed by the session.
      * @member {Number}
@@ -65,8 +65,9 @@ class QualityParameters {
   }
 
   /**
-   * Given another instance of Quality parameters check those measures against te ones stored here.
-   * @param {QualityParameters} measurement - Object containing the measurements.
+   * Given another instance of Quality parameters check those measures against
+   * the ones stored here.
+   * @param {QualityParameters} measurement - Contains the measurements.
    * @return {bool} True if the requirements where fullfilled false otherwise
    */
   doesMetQuality(measurement) {
@@ -170,22 +171,22 @@ class QualityParameters {
   }
   /**
    * Integrate into this object the measures from the client.
-   * @return {Measurement} The taken measures from client.
+   * @argument {Measurement} measure - The taken measures from client.
    */
   introduceClientMeasures(measure) {
-    latency, jitter, bandwidth, packetLoss
+    latency, jitter, bandwidth, packetLoss;
     if (!this.latency) {
       this.latency = measure.latency;
     }
     this.jitterUp = measure.jitter;
     this.packetlossUp = measure.packetLoss;
   }
-    /**
+  /**
    * Integrate into this object the measures from the server.
-   * @return {Measurement} The taken measures from server.
+   * @argument {Measurement} measure - The taken measures from server.
    */
   introduceServerMeasures(measure) {
-    latency, jitter, bandwidth, packetLoss
+    latency, jitter, bandwidth, packetLoss;
     this.latency = measure.latency;
     this.jitterDown = measure.jitter;
     this.packetlossDown = measure.packetLoss;

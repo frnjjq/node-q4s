@@ -16,8 +16,9 @@ const utilQ4S = require('Util.js');
 const connectPromised = util.promisify(net.Socket.connect);
 const bindPromised = util.promisify(dgram.Socket.bind);
 
-/** Network layer class. It emmits events for each recieved message. Implements
- *  functions to send messages over the network
+/**
+ * Network layer class. It emmits events for each recieved message. Implements
+ * functions to send messages over the network
  * @extends EventEmitter
  * @fires ClientNetwork#handshakeResponse
  * @fires ClientNetwork#TCPResponse
@@ -145,9 +146,9 @@ class ClientNetwork extends EventEmitter {
    */
   sendUDP(msg) {
     this.UDPSocket.send(
-      msg.toString(),
-      this.UDPSocketOps.port,
-      this.UDPSocketOps.host
+        msg.toString(),
+        this.UDPSocketOps.port,
+        this.UDPSocketOps.host
     );
     return;
   }
@@ -165,6 +166,5 @@ class ClientNetwork extends EventEmitter {
   closeHandshake() {
     this.handshakeSocket.end();
   }
-
 }
 module.exports = ClientNetwork;
