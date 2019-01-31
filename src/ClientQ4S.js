@@ -6,9 +6,13 @@
  */
 
 const EventEmitter = require('events');
-const ReqQ4S = require('ReqQ4S.js');
-const Session = require('session.js');
-const ClientNetwork = require('ClientNetwork.js');
+
+const Bandwidther = require('./Bandwidther');
+const ClientNetwork = require('./ClientNetwork');
+const Pinger = require('./Pinger');
+const QualityParameters = require('./QualityParameters');
+const ReqQ4S = require('./ReqQ4S');
+const Session = require('./Session');
 
 /**
  * Client Q4S classs.
@@ -22,7 +26,7 @@ class ClientQ4S extends EventEmitter {
   constructor(clientOptions) {
     super();
 
-    this.session = Session.fromOpts(clientOptions);
+    this.ses = Session.fromClientOps(clientOptions);
 
     this.networkHandler = new ClientNetwork();
     this.networkHandler.on('handshakeResponse', this.handshakeHandler);
@@ -41,54 +45,62 @@ class ClientQ4S extends EventEmitter {
           this.emit('close');
         })
         .then(() => {
-          this.networkHandler.sendHandshakeTCP(new ReqQ4S(
+          this.networkHandler.sendHandshakeTCP(ReqQ4S.genReq(
               'BEGIN',
               'q4s://www.example.com',
-              'Q4S/1.0',
               undefined,
-              this.session.toSdp()
+              this.ses.toSdp()
           ));
         });
+  }
+  /**
+   * Sends the Ready request for the passed stage
+   * @param {Number} Stage
+   */
+  startReady(Stage) {
+    const headers = {};
+    headers['Stage'] = Stage;
+    headers['Session-Id'] = this.ses.id;
+    this.networkHandler.sendTCP(ReqQ4S.genReq(
+        'READY',
+        'q4s://www.example.com',
+        headers,
+        this.ses.toSdp()
+    ));
   }
   /**
    * Private Handshake response handler.
    * @param {ResQ4S} res
    */
   async handshakeHandler(res) {
-    switch (this.session.sessionState) {
-      case Session.sessionStates.UNINITIATED:
+    switch (this.ses.sessionState) {
+      case Session.STATES.UNINITIATED:
         if (res.statusCode != 200) {
           this.emit('error', new Error(res.reasonPhrase));
           this.close();
         } else {
           // TODO => Must be changed with the sesion implementation.
-          this.session.mergeServer(Session.fromSdp(res.body));
+          this.ses.mergeServer(Session.fromSdp(res.body));
           this.pinger = new Pinger(
-              this.session.id,
+              this.ses.id,
               this.networkHandler,
-              this.session.measurement.negotiationPingUp,
+              this.ses.measurement.negotiationPingUp,
               255);
-          this.session.sessionState = Session.sessionStates.STABILISHED;
+          this.ses.sessionState = Session.STATES.STABILISHED;
           try {
             await this.networkHandler.initQ4sSocket(
-                this.session.addresses.serverAddress,
-                this.session.addresses.q4sServerPorts.TCP,
-                this.session.addresses.q4sClientPorts.TCP,
-                this.session.addresses.q4sServerPorts.UDP,
-                this.session.addresses.q4sClientPorts.UDP);
+                this.ses.addresses.serverAddress,
+                this.ses.addresses.q4sServerPorts.TCP,
+                this.ses.addresses.q4sClientPorts.TCP,
+                this.ses.addresses.q4sServerPorts.UDP,
+                this.ses.addresses.q4sClientPorts.UDP);
+
+            this.networkHandler.closeHandshake();
+            this.startReady(0);
           } catch (err) {
             this.emit('error', err);
             this.close();
           }
-          this.networkHandler.closeHandshake();
-          const header ={Stage: 0};
-          header['Session-Id'] = this.session.sessionId;
-          this.networkHandler.sendTCP(new ReqQ4S(
-              'READY',
-              'q4s://www.example.com',
-              'Q4S/1.0',
-              header,
-              undefined));
         }
         break;
     }
@@ -98,37 +110,57 @@ class ClientQ4S extends EventEmitter {
    * @param {ResQ4S} res
    */
   async TCPResHandler(res) {
-    switch (this.session.sessionState) {
-      case Session.sessionStates.STABILISHED:
+    switch (this.ses.sessionState) {
+      case Session.STATES.STABILISHED:
         if (res.statusCode != 200) {
           this.emit('error', new Error(res.reasonPhrase));
           this.close();
         } else {
           if (res.headers.Stage === '0') {
-            this.session.sessionState = Session.sessionStates.STAGE_0;
+            this.ses.sessionState = Session.STATES.STAGE_0;
             try {
               const measure = await this.pinger.startMeasurements(false);
-              this.session.quality.doesMetQuality(new QualityParameters(
-                  measure[0].latency,
-                  measure[0].jitter,
-                  measure[0].jitter));
+              const actMeas = new QualityParameters();
+              actMeas.introduceClientMeasures(measure[0]);
+              actMeas.introduceServerMeasures(measure[1]);
+              if (this.ses.quality.doesMetQuality(actMeas)) {
+                if (this.ses.quality.requireReady1()) {
+                  this.bander = new Bandwidther(this.ses.id,
+                      this.networkHandler,
+                      this.ses.quality.bandwidthUp,
+                      this.ses.measurement.negotiationBandwidth);
+                  this.startReady(1);
+                } else {
+                  this.startReady(2);
+                }
+              } else {
+                this.startReady(0);
+              }
             } catch (err) {
-              const header ={Stage: 0};
-              header['Session-Id'] = this.session.sessionId;
-              this.networkHandler.sendTCP(new ReqQ4S(
-                  'READY',
-                  'q4s://www.example.com',
-                  'Q4S/1.0',
-                  header,
-                  undefined));
+              this.startReady(0);
             }
           } else if (res.headers.Stage === '1') {
-            this.session.sessionState = Session.sessionStates.STAGE_1;
+            this.ses.sessionState = Session.STATES.STAGE_1;
+            try {
+              const measure = await this.bander.start();
+              const actMeas = new QualityParameters();
+              actMeas.introduceClientMeasures(measure[0]);
+              actMeas.introduceServerMeasures(measure[1]);
+              if (this.ses.quality.doesMetQuality(actMeas)) {
+                this.startReady(2);
+              } else {
+                this.startReady(1);
+              }
+            } catch (err) {
+              this.startReady(1);
+            }
+          } else if (res.headers.Stage === '2') {
+            this.ses.sessionState = Session.STATES.CONTINUITY;
           } else {
             this.close();
           }
+          break;
         }
-        break;
     }
   }
   /**
@@ -136,11 +168,11 @@ class ClientQ4S extends EventEmitter {
    * @param {ReQQ4S} req
    */
   TCPReqHandler(req) {
-    switch (this.session.sessionState) {
-      case Session.sessionStates.STAGE_0:
+    switch (this.ses.sessionState) {
+      case Session.STATES.STAGE_0:
         this.pinger.cancel();
         const headers = {};
-        headers['Session-Id'] = this.session.sessionId;
+        headers['Session-Id'] = this.ses.sessionId;
         this.networkHandler.sendTCP(new ReqQ4S('Q4S-ALERT', 'q4s://www.example.com', 'Q4S/1.0', headers, undefined));
         break;
     }
