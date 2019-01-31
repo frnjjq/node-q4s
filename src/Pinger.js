@@ -29,15 +29,15 @@ class Pinger {
     this.sequence = 0;
     this.localMeasurements = new Measurement();
     this.reportedMeasurements = new Measurement();
-    this.isCancel = false;
   }
   /**
    * Starts the measurement stage.
-   * @param {Boolean} waitArrival - Wait for the otehr enpoint to start.
+   * @param {Boolean} waitArrival - Wait for the other enpoint to start.
    * @return {Promise} On sucess the measures, on error the error
    */
   startMeasurements(waitArrival) {
     return new Promise((resolve, reject) => {
+      this.rejectCallback = reject;
       const endFunc = () => {
         this.network.removeListener('UDPResponse', resFunc);
         this.network.removeListener('UDPRequest', reqFunc);
@@ -48,27 +48,20 @@ class Pinger {
         resolve([this.localMeasurements, this.reportedMeasurements]);
       };
       const intervaFunc = () => {
-        if (!this.isCancel) {
-          const headers = {Stage: '0'};
-          headers['Session-Id'] = this.sessionId;
-          headers['Sequence-Number'] = this.sequence;
-          headers['Measurements'] = this.localMeasurements.toHeader();
-          this.network.sendUDP(new ReqQ4S(
-              'PING',
-              'q4s://www.example.com',
-              'Q4S/1.0',
-              headers));
-          this.sendingTime[sequenceNumber] = new Date();
+        const headers = {Stage: '0'};
+        headers['Session-Id'] = this.sessionId;
+        headers['Sequence-Number'] = this.sequence;
+        headers['Measurements'] = this.localMeasurements.toHeader();
+        this.network.sendUDP(new ReqQ4S(
+            'PING',
+            'q4s://www.example.com',
+            'Q4S/1.0',
+            headers));
+        this.sendingTime[sequenceNumber] = new Date();
 
-          if (++this.sequence === numberOfPackets) {
-            clearInterval(this.intervalId);
-            setTimeout(endFunc, 300);
-          }
-        } else {
+        if (++this.sequence === numberOfPackets) {
           clearInterval(this.intervalId);
-          this.network.removeListener('UDPResponse', resFunc);
-          this.network.removeListener('UDPRequest', reqFunc);
-          reject('Cancel');
+          setTimeout(endFunc, 300);
         }
       };
       const resFunc = (res) => {
@@ -115,9 +108,12 @@ class Pinger {
    * Cancel communication
    */
   cancel() {
-    // Stop interval
-    // Remove listeners
-    this.isCancel = true;
+    clearInterval(this.intervalId);
+    this.network.removeListener('UDPResponse', resFunc);
+    this.network.removeListener('UDPRequest', reqFunc);
+    if (this.rejectCallback) {
+      this.rejectCallback();
+    }
   }
 }
 

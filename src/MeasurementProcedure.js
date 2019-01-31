@@ -12,8 +12,8 @@ class MeasurementProcedure {
   * uplink during negotiation stage.
   * @param {number} negotiationPingDown - Miliseconds bewtween pings for the
   * downlink during negotiation stage
-  * @param {number} negotiationBandwidth - Minimum bandwidth during
-  * negotiation.
+  * @param {number} negotiationBandwidth - Time that the bandwidth measure
+  * should last in seconds.
   * @param {number} continuityPingUp - Miliseconds between pings for the uplink
   * during the continuity stage.
   * @param {number} continuityPingDown - Miliseconds between pings for the

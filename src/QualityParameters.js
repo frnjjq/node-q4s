@@ -17,9 +17,9 @@ class QualityParameters {
    * @param {(number|undefined)} jitterDown - The maximum jitter allowed by
    * the session in the downlink.
    * @param {(number|undefined)} bandwidthUp - The minimum bandwidth allowed
-   * by the session in the uplink.
+   * by the session in the uplink. kbits/s
    * @param {(number|undefined)} bandwidthDown - The minimum bandwidth allowed
-   * by the session in the downlink.
+   * by the session in the downlink. kbits/s
    * @param {(number|undefined)} packetlossUp - The maximum packet loss allowed
    * by the session in the uplink.
    * @param {(number|undefined)} packetlossDown - The minimum packet loss
@@ -175,21 +175,48 @@ class QualityParameters {
    */
   introduceClientMeasures(measure) {
     latency, jitter, bandwidth, packetLoss;
-    if (!this.latency) {
+    if (!this.latency && this.latency) {
       this.latency = measure.latency;
     }
-    this.jitterUp = measure.jitter;
-    this.packetlossUp = measure.packetLoss;
+    if (measure.jitter) {
+      this.jitterUp = measure.jitter;
+    }
+    if (measure.packetLoss) {
+      this.packetlossUp = measure.packetLoss;
+    }
+    if (measure.bandwidth) {
+      this.bandwidthUp = measure.bandwidth;
+    }
   }
+
   /**
    * Integrate into this object the measures from the server.
    * @argument {Measurement} measure - The taken measures from server.
    */
   introduceServerMeasures(measure) {
-    latency, jitter, bandwidth, packetLoss;
-    this.latency = measure.latency;
-    this.jitterDown = measure.jitter;
-    this.packetlossDown = measure.packetLoss;
+    if (measure.latency) {
+      this.latency = measure.latency;
+    }
+    if (measure.jitter) {
+      this.jitterDown = measure.jitter;
+    }
+    if (measure.packetLoss) {
+      this.packetlossDown = measure.packetLoss;
+    }
+    if (measure.bandwidth) {
+      this.bandwidthDown = measure.bandwidth;
+    }
+  }
+  /**
+   * Determines whether this quality level requires the stage 1.
+   * @return {Boolean} True if required
+   */
+  requireReady1() {
+    if (this.bandwidthUp || this.bandwidthDown) {
+      return true;
+    } else {
+      return false;
+    }
   }
 }
 

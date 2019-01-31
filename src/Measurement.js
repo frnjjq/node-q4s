@@ -113,6 +113,20 @@ class Measurement {
     this.measurements.latency = diff.reduce((prev, next) => prev + next)
     / departureTime.lenght;
   }
+
+  /**
+   * From recieved in bandwidth measurement.
+   * @param {Number[]} arrivedMessages - The sending times
+   * @param {Number} expectedBandwidth - The targeted bandwidth
+   */
+  fromReady1Array(arrivedMessages, expectedBandwidth) {
+    const size = arrivedMessages.lenght;
+    const maxSeq = arrivedMessages.reduce((prev, curr) => {
+      return prev>curr? prev:curr;
+    });
+    this.packetLoss = size / (maxSeq+1);
+    this.bandwidth = expectedBandwidth*this.packetLoss;
+  }
 }
 
 module.exports = Measurement;
