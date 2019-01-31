@@ -21,7 +21,7 @@ class Session {
    * @param {number} alertPause - Alert pause value, number of miliseconds
    * between Alert q4s messages.
    * @param {Number} recoveryPause - Number of miliseconds to wait.
-   * @param {number} sessionState - The State of the current session
+   * @param {number} state - The State of the current session
    * @param {number} id - The session Id of this session.
    * @param {NetworkParameters} addresses - The IP version of the client
    * address.
@@ -29,14 +29,14 @@ class Session {
    * @param {MeasurementProcedure} measurement - The client IP address.
    */
   constructor(qosLevelUp, qosLevelDown, alertingMode, alertPause,
-      recoveryPause, sessionState, id, addresses, quality,
+      recoveryPause, state, id, addresses, quality,
       measurement) {
     this.qosLevelUp = qosLevelUp;
     this.qosLevelDown = qosLevelDown;
     this.alertingMode = alertingMode;
     this.alertPause = alertPause;
     this.recoveryPause = recoveryPause;
-    this.sessionState = sessionState;
+    this.state = state;
     this.addresses = addresses;
     this.quality = quality;
     this.measurement = measurement;
@@ -50,7 +50,7 @@ class Session {
   static fromSdp(sdp) {
     let qosLevelUp = 0;
     let qosLevelDown = 0;
-    let alertingMode = alertTypes.REACTIVE;
+    let alertingMode = ALERT_TYP.REACTIVE;
     let alertPause = 1000;
     let recoveryPause = 1000;
     let clientPublicAddressType;
@@ -81,7 +81,7 @@ class Session {
         } else if (line.indexOf('a=alerting-mode:') === 0) {
           const aux = line.substring(16);
           if (aux.localeCompare('Q4S-aware-network') === 0) {
-            alertingMode = alertTypes.Q4SAWARE;
+            alertingMode = ALERT_TYP.Q4SAWARE;
           }
         } else if (line.indexOf('a=alert-pause:') === 0) {
           alertPause = parseInt(line.substring(14), 10);
@@ -136,7 +136,7 @@ class Session {
     const quality = new QualityParameters(latency, jitterUp, jitterDown,
         bandwidthUp, bandwidthDown, packetlossUp, packetlossDown);
     return new Session(qosLevelUp, qosLevelDown, alertingMode, alertPause,
-        recoveryPause, sessionStates.UNINITIATED, SessionId, addresses,
+        recoveryPause, STATES.UNINITIATED, SessionId, addresses,
         quality, measurement);
   }
 
@@ -148,7 +148,7 @@ class Session {
     let sdp = 'o=q4s ' + this.sessionId + ' 2353687637 IN IPx xxx.xxx.xxx.xxx';
     sdp = sdp + 'a=qos-level:' + this.qosLevelUp + '/' +
     this.qosLevelDown + '\r\n';
-    if (this.alertingMode === alertTypes.REACTIVE) {
+    if (this.alertingMode === ALERT_TYP.REACTIVE) {
       sdp = sdp + 'a=alerting-mode:Reactive\r\n';
     } else {
       sdp = sdp + 'a=alerting-mode:Q4S-aware-network\r\n';
@@ -202,7 +202,7 @@ class Session {
   static fromClientOps(options) {
     const qosLevelUp = 0;
     const qosLevelDown = 0;
-    const alertingMode = alertTypes.REACTIVE;
+    const alertingMode = ALERT_TYP.REACTIVE;
     const alertPause = 1000;
     const recoveryPause = 1000;
     let latency = 0;
@@ -256,18 +256,18 @@ class Session {
         undefined);
 
     return new Session(qosLevelUp, qosLevelDown, alertingMode, alertPause,
-        recoveryPause, sessionState, undefined, addresses, quality, undefined,
-        sessionStates.UNINITIATED);
+        recoveryPause, state, undefined, addresses, quality, undefined,
+        STATES.UNINITIATED);
   }
 };
 
 
-const alertTypes = Object.freeze({
+const ALERT_TYP = Object.freeze({
   'Q4SAWARE': 0,
   'REACTIVE': 1,
 });
 
-const sessionStates = Object.freeze({
+const STATES = Object.freeze({
   'UNINITIATED': 0,
   'STABILISHED': 1,
   'STAGE_O': 2,
@@ -281,6 +281,6 @@ const sessionStates = Object.freeze({
  * in a session
  */
 module.exports = Session;
-module.exports.alertTypes = alertTypes;
-module.exports.sessionStates = sessionStates;
+module.exports.ALERT_TYP = ALERT_TYP;
+module.exports.STATES = STATES;
 

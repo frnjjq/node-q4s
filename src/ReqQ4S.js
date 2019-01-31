@@ -6,6 +6,7 @@
  */
 const crypto = require('crypto');
 require('url');
+const Util = require('./Util');
 
 /**
  * Request Q4S class. Options to build , generate, parse and validate Q4S
@@ -79,6 +80,27 @@ class ReqQ4S {
     req.validate();
     return req;
   }
+
+  /**
+   * Factory method to build a new ReqQ4S abstracting part of the details.
+   * @param {string} method - The string containing the method.
+   * @param {URL} requestURI - The URI of the request.
+   * @param {Object} headers - Object containing all the headers.
+   * @param {string} headers.headername - One entry in the object for each
+   * header.
+   * @param {string} body - The body of the request. Normally a sdp message.
+   * returns an error.
+   * @return {ReqQ4SQ}
+   */
+  genReq(method, requestURI, headers, body) {
+    return new ReqQ4S(
+        method,
+        requestURI,
+        Util.Q4SVERSION,
+        headers,
+        body);
+  }
+
   /**
    * Check that the data in this is correct and returns true if all is ok or
    * false if data is malformed.If there is anything malformed an error will be
