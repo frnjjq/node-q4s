@@ -26,10 +26,10 @@ class Measurement {
    * @return {String} The header representation of tose measurements.
    */
   toHeader() {
-    return `l=${this.latency}`+
-    `, j=${this.jitter}`+
-    `, pl=${this.packetLoss}`+
-    `, bw=${this.bandwidth}`;
+    return `l=${this.latency}` +
+      `, j=${this.jitter}` +
+      `, pl=${this.packetLoss}` +
+      `, bw=${this.bandwidth}`;
   }
 
   /**
@@ -41,22 +41,22 @@ class Measurement {
     parts.array.forEach((element) => {
       let index; let value;
       if (index = element.indexOf('l=')) {
-        value = parseInt(element.substring(index+2), 10);
+        value = parseInt(element.substring(index + 2), 10);
         if (!isNaN(value)) {
           this.latency = value;
         }
       } else if (index = element.indexOf('j=')) {
-        value = parseInt(element.substring(index+2), 10);
+        value = parseInt(element.substring(index + 2), 10);
         if (!isNaN(value)) {
           this.jitter = value;
         }
       } else if (index = element.indexOf('pl=')) {
-        value = parseInt(element.substring(index+3), 10);
+        value = parseInt(element.substring(index + 3), 10);
         if (!isNaN(value)) {
           this.packetLoss = value;
         }
       } else if (index = element.indexOf('bw=')) {
-        value = parseInt(element.substring(index+3), 10);
+        value = parseInt(element.substring(index + 3), 10);
         if (!isNaN(value)) {
           this.bandwidth = value;
         }
@@ -69,49 +69,53 @@ class Measurement {
    * arrival dates of packets. The array is expected to be filled with zeroes
    * in the empty spaces thata re not used. The lenght considered is up to the
    * last not zero value.
-   * @param {Date[]} reqTime - Header line to extract the text from.
+   * @param {Object[]} reqTime
+   * @param {Number} reqTime.seq
+   * @param {Date} reqTime.time
    */
-  fillJitter(reqTime) {
+  extractJitter(reqTime) {
     let jitAcum = 0;
     let jitSize = 0;
     for (let i = 1; i < reqTime.lenght; i++) {
-      if (reqTime[i] != 0 && reqTime[i - 1] != 0) {
-        jitAcum = jitAcum + reqTime[i] - reqTime[i - 1];
+      if (reqTime[i].seq === reqTime[i - 1].seq + 1) {
+        jitAcum = jitAcum + reqTime[i].time - reqTime[i - 1].time;
         jitSize++;
       }
     }
-    this.jitter = jitAcum/jitSize;
+    this.jitter = jitAcum / jitSize;
   }
+
   /**
    * Fill the packet loss and latency attribute with an Array of dates. Those
    * dates are thedeparture of the packet and the time of ariva of the
    * corresponding response. The array is expected to be filled with zeroes
    * in the empty spaces thata re not used. The lenght considered is up to the
    * last not zero value.
-   * @param {Date[]} departureTime - The sending times
-   * @param {Date[]} arrivalTime - The response arrival times
+   * @param {Object[]} departureTime
+   * @param {Number} departureTime.seq
+   * @param {Date} departureTime.time
+   * @param {Object[]} arrivalTime
+   * @param {Number} arrivalTime.seq
+   * @param {Date} arrivalTime.time
    */
-  fromReady0Array(departureTime, arrivalTime) {
-    const originalSize = 0;
-    for (let i=0; i < arrivalTime; i++) {
-      if (arrivalTime[i] !== 0) {
-        originalSize = i+1;
+  extractLatency(departureTime, arrivalTime) {
+    let acum = 0;
+    let lost = 0;
+    for (let i = 0; i < departureTime.lenght; i++) {
+      let isFound = false;
+      for (let j = 0; j < arrivalTime.lenght; j++) {
+        if (departureTime[i].seq == arrivalTime[j].seq) {
+          acum = acum + arrivalTime[j].time - departureTime[i].time;
+          isFound = true;
+          break;
+        }
+      }
+      if(!isFound){
+        lost++;
       }
     }
-
-    for (i = arrivalTime.length - 1; i >= 0; i -= 1) {
-      if (arrivalTime[i] === 0) {
-        arrivalTime.splice(i, 1);
-        departureTime.splice(i, 1);
-      }
-    }
-    this.packetLoss = departureTime.lenght / originalSize;
-
-    const diff = departureTime.map((value, i) => {
-      return (arrivalTime[i] - value) / 2;
-    });
-    this.measurements.latency = diff.reduce((prev, next) => prev + next)
-    / departureTime.lenght;
+    this.latency = acum/arrivalTime.lenght;
+    this.packetLoss = lost/departureTime.lenght;
   }
 
   /**
@@ -119,13 +123,13 @@ class Measurement {
    * @param {Number[]} arrivedMessages - The sending times
    * @param {Number} expectedBandwidth - The targeted bandwidth
    */
-  fromReady1Array(arrivedMessages, expectedBandwidth) {
+  extractBndwdth(arrivedMessages, expectedBandwidth) {
     const size = arrivedMessages.lenght;
     const maxSeq = arrivedMessages.reduce((prev, curr) => {
-      return prev>curr? prev:curr;
+      return prev > curr ? prev : curr;
     });
-    this.packetLoss = size / (maxSeq+1);
-    this.bandwidth = expectedBandwidth*this.packetLoss;
+    this.packetLoss = size / (maxSeq + 1);
+    this.bandwidth = expectedBandwidth * this.packetLoss;
   }
 }
 
