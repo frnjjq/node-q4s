@@ -9,6 +9,7 @@ const EventEmitter = require('events');
 
 const Bandwidther = require('./Bandwidther');
 const ClientNetwork = require('./ClientNetwork');
+const ContinuityPinger = require('./ContinuityPinger');
 const Pinger = require('./Pinger');
 const QualityParameters = require('./QualityParameters');
 const ReqQ4S = require('./ReqQ4S');
@@ -79,14 +80,14 @@ class ClientQ4S extends EventEmitter {
           this.emit('error', new Error(res.reasonPhrase));
           this.close();
         } else {
+          this.ses.sessionState = Session.STATES.STABILISHED;
           // TODO => Must be changed with the sesion implementation.
           this.ses.mergeServer(Session.fromSdp(res.body));
-          this.pinger = new Pinger(
+          this.pinger = Pinger.getNegotiationClient(
               this.ses.id,
               this.networkHandler,
               this.ses.measurement.negotiationPingUp,
               255);
-          this.ses.sessionState = Session.STATES.STABILISHED;
           try {
             await this.networkHandler.initQ4sSocket(
                 this.ses.addresses.serverAddress,
@@ -94,7 +95,6 @@ class ClientQ4S extends EventEmitter {
                 this.ses.addresses.q4sClientPorts.TCP,
                 this.ses.addresses.q4sServerPorts.UDP,
                 this.ses.addresses.q4sClientPorts.UDP);
-
             this.networkHandler.closeHandshake();
             this.startReady(0);
           } catch (err) {
@@ -156,6 +156,14 @@ class ClientQ4S extends EventEmitter {
             }
           } else if (res.headers.Stage === '2') {
             this.ses.sessionState = Session.STATES.CONTINUITY;
+            this.pinger = ContinuityPinger.getContinuity(
+                this.ses.id,
+                this.networkHandler,
+                this.ses.measurement.continuityPingUp,
+                this.ses.measurement.windowSizeUp,
+                this.ses.measurement.windowSizePctLssUp);
+            this.emit('completed', res.headers['Trigger-URI']);
+            this.pinger.start();
           } else {
             this.close();
           }
@@ -168,13 +176,27 @@ class ClientQ4S extends EventEmitter {
    * @param {ReQQ4S} req
    */
   TCPReqHandler(req) {
+    // TODO -> PUEDE LLEGAR NUEVA CALDIAD
+    // TODO -> Debo pedir una mayor QoS
+    // TODO -> DEbo responder con el SDP con la firma
     switch (this.ses.sessionState) {
       case Session.STATES.STAGE_0:
         this.pinger.cancel();
         const headers = {};
         headers['Session-Id'] = this.ses.sessionId;
         this.networkHandler.sendTCP(new ReqQ4S('Q4S-ALERT', 'q4s://www.example.com', 'Q4S/1.0', headers, undefined));
+        this.startReady(0);
         break;
+      case Session.STATES.CONTINUITY:
+        if (req.method === 'Q4S-ALERT') {
+          const headers = {};
+          headers['Session-Id'] = this.ses.sessionId;
+          this.networkHandler.sendTCP(ReqQ4S.genReq('Q4S-ALERT', 'q4s://www.example.com', headers, undefined));
+        } else if (req.method === 'Q4S-RECOVERY') {
+          const headers = {};
+          headers['Session-Id'] = this.ses.sessionId;
+          this.networkHandler.sendTCP(ReqQ4S.genReq('Q4S-RECOVERY', 'q4s://www.example.com', headers, undefined));
+        }
     }
   }
   /**

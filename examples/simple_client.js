@@ -50,6 +50,12 @@ client.on('error', (code, reason) => {
 client.on('connected', (appServerPorts) => {
   console.log('Connected to the server');
 });
+
+// Event fired when the client connects to the server.
+client.on('completed', (appURI) => {
+  console.log('Completed initial measures. Reported URI is '+appURI);
+});
+
 // Event fired when the q4s session is fnished, by any mean.
 client.on('end', () => {
   console.log('Finished session, either by server or client');

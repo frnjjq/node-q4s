@@ -110,7 +110,7 @@ class Measurement {
           break;
         }
       }
-      if(!isFound){
+      if (!isFound) {
         lost++;
       }
     }
