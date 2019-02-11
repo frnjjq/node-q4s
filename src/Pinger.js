@@ -14,20 +14,14 @@ class Pinger {
    * @param {ClientNetwotk} network - Network object
    * @param {number} periodPings - ms elapsed between pings
    * @param {Boolean} proactive - Packet loss widnow size
-   * @param {number} [numberPings] - Number of pings to send
-   * @param {number} [pingWndwSze] - Latency and Jitter window size
-   * @param {number} [pcktlssWndwSze] - Packet loss window size
-
+   * @param {number} numberPings - Number of pings to send
    */
-  constructor(sessionId, network, periodPings, proactive, numberPings, pingWndwSze, pcktlssWndwSze) {
+  constructor(sessionId, network, periodPings, proactive, numberPings) {
     this.sessionId = sessionId;
     this.network = network;
     this.periodPings = periodPings;
     this.proactive = proactive;
     this.numberPings = numberPings;
-    this.pingWndwSze = pingWndwSze;
-    this.pcktlssWndwSze = pcktlssWndwSze;
-    this.maximumWin = pingWndwSze > pcktlssWndwSze ? pingWndwSze : pcktlssWndwSze;
 
     this.sendingTime = [];
     this.recieveTime = [];
@@ -38,6 +32,14 @@ class Pinger {
 
     this.sequence = 0;
   }
+
+  static getNegotiationClient(sessionId, network, periodPings, numberPings) {
+    return new Pinger(sessionId, network, periodPings, true, numberPings);
+  }
+  static getNegotiationServer(sessionId, network, periodPings, numberPing) {
+    return new Pinger(sessionId, network, periodPings, false, numberPing);
+  }
+
   /**
    * Starts the measurement stage.
    * @return {Promise} On sucess the measures, on error the error
@@ -51,15 +53,27 @@ class Pinger {
 
       if (this.proactive) {
         this.intervalId = setInterval(this._intHandler,
-          this.measurementProcedure.negotiationPingUp);
+          this.periodPings);
       } else {
         this.network.once('UDPRequest', () => {
           this.intervalId = setInterval(this._intHandler,
-            this.measurementProcedure.negotiationPingUp);
+            this.periodPings);
         });
       }
     });
   }
+    /**
+   * Cancel communication
+   */
+  cancel() {
+    clearInterval(this.intervalId);
+    this.network.removeListener('UDPResponse', resFunc);
+    this.network.removeListener('UDPRequest', reqFunc);
+    if (this.rejectCallback) {
+      this.rejectCallback();
+    }
+  }
+
   _intHandler() {
     const headers = {};
     headers['Session-Id'] = this.sessionId;
@@ -80,7 +94,6 @@ class Pinger {
   _endHandler() {
     this.network.removeListener('UDPResponse', this._resHandler);
     this.network.removeListener('UDPRequest', this._reqHandler);
-    this.cleanArrays();
     this.localMeas.extractLatency(this.sendingTime, this.recieveTime);
     this.localMeas.extractJitter(this.reqTime);
     this.resolveCallback([this.localMeas, this.reporMeas]);
@@ -92,7 +105,6 @@ class Pinger {
     headers['Session-Id'] = req.headers['Session-Id'];
     this.network.sendUDP(ResQ4S.genRes(200, headers, undefined));
     this.reqTime.push(time);
-    this.cleanArrays();
     this.localMeas.extractJitter(this.reqTime);
     this.reporMeas.fromHeader(req.headers.Measurements);
   }
@@ -100,53 +112,7 @@ class Pinger {
     const seq = res.headers['Sequence-Number'];
     if (seq) {
       this.recieveTime.push({ seq: seq, time: time });
-      this.cleanArrays();
       this.localMeas.extractLatency(this.sendingTime, this.recieveTime);
-    }
-  }
-
-  /**
-   * Cancel communication
-   */
-  cancel() {
-    clearInterval(this.intervalId);
-    this.network.removeListener('UDPResponse', resFunc);
-    this.network.removeListener('UDPRequest', reqFunc);
-    if (this.rejectCallback) {
-      this.rejectCallback();
-    }
-  }
-  /**
-   * If needed remove data.
-   */
-  cleanArrays() {
-    if (!this.numberPings) {
-      let samplesSent = this.sendingTime.length;
-      let anyRemoved = false;
-      while (this.maximumWin > samplesSent) {
-        this.sendingTime.slice();
-        anyRemoved = true;
-      }
-      if(anyRemoved){
-        this.recieveTime = this.recieveTime.filter((elmnt) => {
-          for (let i = 0; i < this.recieveTime.length; i++) {
-            if (this.sendingTime[i] == elmnt.seq) {
-              return true;
-            }
-          }
-          return false;
-        });
-      }
-
-      let recievedReqs = this.reqTime.length;
-      if (this.maximumWin > recievedReqs){
-        this.reqTime.sort((a, b) => {
-          return a.seq - b.seq;
-        });
-      }
-      while (this.maximumWin > recievedReqs) {
-        this.reqTime.slice();
-      }
     }
   }
 }
