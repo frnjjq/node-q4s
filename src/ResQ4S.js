@@ -88,7 +88,7 @@ class ResQ4S {
    * returns an error.
    * @return {ResQ4SQ}
    */
-  genRes(statusCode, headers, body) {
+  static genRes(statusCode, headers, body) {
     return new ResQ4S(
         Util.Q4SVERSION,
         statusCode,
@@ -104,9 +104,11 @@ class ResQ4S {
    * returns an error.
    */
   static fromString(str) {
+    console.log ("String=")
+    console.log(str);
     let q4sVersion; let statusCode; let reasonPhrase;
     const headers = {};
-
+    console.log("index of body is"+str.indexOf('\r\n\r\n'))
     const body = str.substring(str.indexOf('\r\n\r\n') + 4);
     const headerPart = str.substring(0, str.indexOf('\r\n\r\n'));
     const headLine = headerPart.split('\r\n');
@@ -124,6 +126,7 @@ class ResQ4S {
     const res = new ResQ4S(q4sVersion, statusCode, reasonPhrase, headers,
         body);
     res.validate();
+    console.log(res);
     return res;
   }
 
@@ -149,12 +152,16 @@ class ResQ4S {
     message = message + this.q4sVersion + ' ' + this.statusCode + ' ';
     message = message + this.reasonPhrase + '\r\n';
 
-    const entries = Object.entries(this.headers);
-    entries.forEach((item) => {
-      message = message + item[0] + ': ' + item[1] + '\r\n';
-    });
+    if(this.headers) {
+      const entries = Object.entries(this.headers);
+      entries.forEach((item) => {
+        message = message + item[0] + ': ' + item[1] + '\r\n';
+      });
+    }
     message = message + '\r\n';
-    message = message + this.body;
+    if(this.body){
+      message = message + this.body;
+    }
     return message;
   }
 };

@@ -1,6 +1,9 @@
-const q4sClient = req('../src/client.js');
+const ClientQ4S = require('../src/ClientQ4S');
 
 const Options = {
+  /* The URL to make to the requests to */
+  url: 'q4s://www.example.com',
+  
   /* Select the maximum latency required in miliseconds.
    * It is the same for the uplink and downlink.
    */
@@ -40,7 +43,7 @@ const Options = {
   appPortsUDP: '600',
 };
 
-client = new q4sClient(Options);
+let client = new ClientQ4S();
 
 // Listen error events to knwo when the client failed to comunicate with the server.
 client.on('error', (code, reason) => {
@@ -61,14 +64,24 @@ client.on('end', () => {
   console.log('Finished session, either by server or client');
 });
 
-// Call connect with the host and port parameters.
-client.connect('localhost', 521);
+client.importClientOps(Options).then( ()=> {
+  // Call connect with the host and port parameters.
+  client.connect('138.4.7.196', 27015);
 
-/* Do the app execution during the necesary time.
- * If an end event is emitted. It is because the server closed the connection.
- * In case error is raised the reason is given though code and reason.
- */
+  /* Do the app execution during the necesary time.
+   * If an end event is emitted. It is because the server closed the connection.
+   * In case error is raised the reason is given though code and reason.
+   */
+  setTimeout(() => {
+    // Close gently the connection when the app finishes.
+    client.close();
+  },60*1000);
+});
 
-// Close gently the connection when the app finishes.
-cli.close();
+
+
+
+
+
+
 

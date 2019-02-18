@@ -92,13 +92,8 @@ class ReqQ4S {
    * returns an error.
    * @return {ReqQ4SQ}
    */
-  genReq(method, requestURI, headers, body) {
-    return new ReqQ4S(
-        method,
-        requestURI,
-        Util.Q4SVERSION,
-        headers,
-        body);
+  static genReq(method, requestURI, headers, body) {
+    return new ReqQ4S(method, requestURI, Util.Q4SVERSION, headers, body);
   }
 
   /**
@@ -121,7 +116,7 @@ class ReqQ4S {
     }
     if (this.headers.signature !== undefined) {
       if (crypto.createHash('md5').update(this.body).digest('hex') !=
-      this.headers.signature) {
+        this.headers.signature) {
         throw new Error('Signature MD5 does not match the body.');
       }
     }
@@ -132,7 +127,7 @@ class ReqQ4S {
       throw new Error('Content-Type header is not present');
     }
     if (this.headers['Transfer-Encoding'] !== undefined &&
-    this.headers['Transfer-Encoding'] !== 'indentity') {
+      this.headers['Transfer-Encoding'] !== 'indentity') {
       throw new Error('Transfer-Encoding header can only be identity');
     }
     return;
@@ -144,8 +139,8 @@ class ReqQ4S {
    */
   signBody() {
     this.headers.signature = crypto.createHash('md5')
-        .update(this.body)
-        .digest('hex');
+      .update(this.body)
+      .digest('hex');
   }
 
   /**
@@ -156,13 +151,16 @@ class ReqQ4S {
     let message = '';
     message = message + this.method + ' ' + this.requestURI + ' ';
     message = message + this.q4sVersion + '\r\n';
-
-    const entries = Object.entries(this.headers);
-    entries.forEach((item) => {
-      message = message + item[0] + ': ' + item[1] + '\r\n';
-    });
+    if (this.headers) {
+      const entries = Object.entries(this.headers);
+      entries.forEach((item) => {
+        message = message + item[0] + ': ' + item[1] + '\r\n';
+      });
+    }
     message = message + '\r\n';
-    message = message + this.body;
+    if(this.body){
+      message = message + this.body;
+    }
     return message;
   }
 };

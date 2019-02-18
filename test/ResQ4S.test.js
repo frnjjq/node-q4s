@@ -36,5 +36,13 @@ describe('ResQ4S', function() {
       res = new ResQ4S('Q4S/1.0', 200, 'OK', headers, 'This is a body');
       expect(res.toString()).toEqual(resultStr);
     });
+
+    test('Should print without body or headers', function() {
+      const resultStr = 'Q4S/1.0 200 OK\r\n'
+        + '\r\n';
+      res = new ResQ4S('Q4S/1.0', 200, 'OK', undefined, undefined);
+      expect(res.toString()).toEqual(resultStr);
+    });
+
   });
 });

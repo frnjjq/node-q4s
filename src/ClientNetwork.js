@@ -9,12 +9,9 @@ const net = require('net');
 const util = require('util');
 
 
-const res = require('ResQ4S.js');
-const req = require('ReqQ4S.js');
-const utilQ4S = require('Util.js');
-
-const connectPromised = util.promisify(net.Socket.connect);
-const bindPromised = util.promisify(dgram.Socket.bind);
+const ResQ4S = require('./ResQ4S');
+const ReqQ4S = require('./ReqQ4S');
+const utilQ4S = require('./Util');
 
 /**
  * Network layer class. It emmits events for each recieved message. Implements
@@ -36,9 +33,11 @@ class ClientNetwork extends EventEmitter {
      * @member {net.Socket}
      */
     this.handshakeSocket = new net.Socket();
-    this.handshakeSocket.connectPromised = connectPromised;
+    this.handshakeSocket.connectPromised = util.promisify(this.handshakeSocket.connect);
     this.handshakeSocket.on('data', (data) => {
-      this.emit('handshakeResponse', res.fromString(data));
+      console.log(data);
+      console.log(data.toString('utf-8'));
+      this.emit('handshakeResponse', ResQ4S.fromString(data.toString('utf-8')));
     });
     this.handshakeSocket.on('error', (err) => {
       this.closeHandshake();
@@ -49,12 +48,13 @@ class ClientNetwork extends EventEmitter {
      * @member {net.Socket}
      */
     this.TCPSocket = new net.Socket();
-    this.TCPSocket.connectPromised = connectPromised;
+    this.TCPSocket.connectPromised = util.promisify(this.TCPSocket.connect);
     this.TCPSocket.on('data', (data) => {
-      if (utilQ4S.isRequest(data)) {
-        this.emit('TCPRequest', req.fromString(data));
+      const msg = data.toString('utf-8');
+      if (utilQ4S.isRequest(msg)) {
+        this.emit('TCPRequest', ReqQ4S.fromString(msg));
       } else {
-        this.emit('TCPResponse', res.fromString(data));
+        this.emit('TCPResponse', ResQ4S.fromString(msg));
       }
     });
     this.TCPSocket.on('error', (err) => {
@@ -66,13 +66,15 @@ class ClientNetwork extends EventEmitter {
      * @member {dgram.Socket}
      */
     this.UDPSocket = dgram.createSocket('udp4');
-    this.UDPSocket.bindPromised = bindPromised;
+    
+    this.UDPSocket.bindPromised = util.promisify(this.UDPSocket.bind);
     this.UDPSocket.on('message', (msg, rinfo) => {
       const now = new Date();
-      if (res.isRequest(msg)) {
-        this.emit('UDPRequest', req.fromString(msg), now);
+      const msgString = msg.toString('utf-8');
+      if (res.isRequest(msgString)) {
+        this.emit('UDPRequest', ReqQ4S.fromString(msgString), now);
       } else {
-        this.emit('UDPResponse', res.fromString(msg), now);
+        this.emit('UDPResponse', ResQ4S.fromString(msgString), now);
       }
     });
     this.UDPSocket.on('error', (err) => {

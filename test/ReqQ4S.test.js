@@ -105,15 +105,6 @@ describe('q4sReq', function() {
         req = ReqQ4S.fromString(msg);
       }).toThrow('Content-Type header is not present');
     });
-
-    test('Random generated strings should trow at any reason', function() {
-      for (let i = 0; i < 50; i++) {
-        const msg = faker.lorem.text();
-        expect(() => {
-          req = ReqQ4S.fromString(msg);
-        }).toThrow();
-      }
-    });
   });
 
   describe('toString', function() {
@@ -128,6 +119,14 @@ describe('q4sReq', function() {
         + 'header2: 2\r\n'
         + '\r\n'
         + 'This is the body';
+      const str = req.toString();
+      expect(str).toEqual(resultStr);
+    });
+
+    test('Should print with empty body and headers', function() {
+      const req = new ReqQ4S('READY', new URL('localhost:30000'), 'Q4S/1', undefined, undefined);
+      const resultStr = 'READY localhost:30000 Q4S/1\r\n'
+        + '\r\n';
       const str = req.toString();
       expect(str).toEqual(resultStr);
     });
