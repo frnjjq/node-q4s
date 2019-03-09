@@ -1,7 +1,7 @@
 const crypto = require('crypto');
 const url = require('url');
 
-const Request = require('../lib/Request');
+const Request = require('../lib/request');
 
   describe('fromString & validation', function() {
     test('Correct Req generation', function() {
