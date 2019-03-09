@@ -4,8 +4,8 @@
   "description": "Implementation of the Q4S client and server for node.js",
   "main": "index.js",
   "scripts": {
-    "lint": "./node_modules/.bin/eslint ./src ",
-    "lintfix": "./node_modules/.bin/eslint ./src --fix",
+    "lint": "./node_modules/.bin/eslint ./lib ",
+    "lintfix": "./node_modules/.bin/eslint ./lib --fix",
     "test": "./node_modules/.bin/jest --coverage",
     "gendoc": "./node_modules/.bin/jsdoc -c docconf.json"
   },
@@ -27,11 +27,12 @@
     "eslint": "^5.9.0",
     "eslint-config-google": "^0.11.0",
     "faker": "^4.1.0",
-    "jest": "^23.6.0",
+    "jest": "^24.1.0",
     "jsdoc": "^3.5.5"
   },
   "dependencies": {
     "ip": "^1.1.5",
+    "lokijs": "^1.5.6",
     "public-ip": "^3.0.0"
   }
 }

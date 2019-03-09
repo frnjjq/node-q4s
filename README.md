@@ -18,8 +18,6 @@ See docs and example programs for notes on how to use this project in a producti
 
 This module is aimed to be compatible with current [nodejs LTS releases](https://github.com/nodejs/Release) from 8.x.
 
-This module does not have production dependencies. So there is not associated security risks associated to third party modules.
-
 ### Installing
 
 Clone the repository to the desired location.
@@ -51,6 +49,7 @@ The results should show no error on main branch.
 
 Documentation can be generated from sources running the next script.
 ```
+npm install --only=dev
 npm run gendoc
 ```
 The documentation will be placed in web format in /docs/index.html
@@ -67,6 +66,9 @@ Please read [CONTRIBUTING.md](https://github.com/frnjjq/node-q4s/blob/master/CON
 
 We use [SemVer](http://semver.org/) for versioning. For the versions available, see the [tags on this repository](https://github.com/frnjjq/node-q4s/tags). 
 
+## Known Bugs and Gotchas
+- Due the Javscript event queue bloquing, the jitter measures may be bigger than the actual values.
+
 ## Authors
 
 * **Francisco José Juan Quintanilla** - *Initial work* - Nokia Spain
@@ -80,4 +82,3 @@ This project is licensed under the Apache License v2 - see the [LICENSE](https:/
 ## Acknowledgments
 
 * My working team in Nokia Spain
-* Jose Javier Garcia Aranda as brain behind the protocol.

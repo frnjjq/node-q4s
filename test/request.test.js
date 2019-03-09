@@ -1,11 +1,8 @@
 const crypto = require('crypto');
-const faker = require('faker');
 const url = require('url');
 
-const ReqQ4S = require('../src/ReqQ4S.js');
+const Request = require('../lib/Request');
 
-
-describe('q4sReq', function() {
   describe('fromString & validation', function() {
     test('Correct Req generation', function() {
       const msg = 'PING q4s://localhost Q4S/1.0\r\n'
@@ -14,7 +11,7 @@ describe('q4sReq', function() {
         + 'Content-Type: text/plain\r\n'
         + '\r\n'
         + 'This is a shit of body';
-      const req = ReqQ4S.fromString(msg);
+      const req = Request.fromString(msg);
       expect(req).toHaveProperty('method', 'PING');
       expect(req).toHaveProperty('requestURI', new URL('q4s://localhost'));
       expect(req).toHaveProperty('q4sVersion', 'Q4S/1.0');
@@ -32,7 +29,7 @@ describe('q4sReq', function() {
         + '\r\n'
         + 'This is a shit of body';
       expect(() => {
-        req = ReqQ4S.fromString(msg);
+        req = Request.fromString(msg);
       }).toThrow('Missing an argument in the start line');
     });
 
@@ -44,7 +41,7 @@ describe('q4sReq', function() {
         + '\r\n'
         + 'This is a shit of body';
       expect(() => {
-        req = ReqQ4S.fromString(msg);
+        req = Request.fromString(msg);
       }).toThrow('Method field  does not contain a valid verb.');
     });
     test('READY verb without stage header', function() {
@@ -55,7 +52,7 @@ describe('q4sReq', function() {
         + '\r\n'
         + 'This is a shit of body';
       expect(() => {
-        req = ReqQ4S.fromString(msg);
+        req = Request.fromString(msg);
       }).toThrow('READY method without stage');
     });
     test('Tranfer encoding header not equal to identity', function() {
@@ -67,7 +64,7 @@ describe('q4sReq', function() {
         + '\r\n'
         + 'This is a shit of body';
       expect(() => {
-        req = ReqQ4S.fromString(msg);
+        req = Request.fromString(msg);
       }).toThrow('Transfer-Encoding header can only be identity');
     });
 
@@ -80,7 +77,7 @@ describe('q4sReq', function() {
         + '\r\n'
         + 'This is a shit of body';
       expect(() => {
-        req = ReqQ4S.fromString(msg);
+        req = Request.fromString(msg);
       }).toThrow('Body in the request is compressed');
     });
 
@@ -92,7 +89,7 @@ describe('q4sReq', function() {
         + '\r\n'
         + 'This is a shit of body';
       expect(() => {
-        req = ReqQ4S.fromString(msg);
+        req = Request.fromString(msg);
       }).toThrow('Signature MD5 does not match the body.');
     });
 
@@ -102,7 +99,7 @@ describe('q4sReq', function() {
         + '\r\n'
         + 'This is a shit of body';
       expect(() => {
-        req = ReqQ4S.fromString(msg);
+        req = Request.fromString(msg);
       }).toThrow('Content-Type header is not present');
     });
   });
@@ -113,7 +110,7 @@ describe('q4sReq', function() {
         header1: '1',
         header2: '2',
       };
-      const req = new ReqQ4S('READY', new URL('localhost:30000'), 'Q4S/1', headers, 'This is the body');
+      const req = new Request('READY', new URL('localhost:30000'), 'Q4S/1', headers, 'This is the body');
       const resultStr = 'READY localhost:30000 Q4S/1\r\n'
         + 'header1: 1\r\n'
         + 'header2: 2\r\n'
@@ -124,7 +121,7 @@ describe('q4sReq', function() {
     });
 
     test('Should print with empty body and headers', function() {
-      const req = new ReqQ4S('READY', new URL('localhost:30000'), 'Q4S/1', undefined, undefined);
+      const req = new Request('READY', new URL('localhost:30000'), 'Q4S/1', undefined, undefined);
       const resultStr = 'READY localhost:30000 Q4S/1\r\n'
         + '\r\n';
       const str = req.toString();
@@ -140,9 +137,8 @@ describe('q4sReq', function() {
       };
       const body = 'This is the body';
       const hash = crypto.createHash('md5').update(body).digest('hex');
-      const req = new ReqQ4S('READY', new URL('localhost:30000'), 'Q4S/1', headers, body);
+      const req = new Request('READY', new URL('localhost:30000'), 'Q4S/1', headers, body);
       req.signBody();
       expect(req.headers.signature).toEqual(hash);
     });
   });
-});
