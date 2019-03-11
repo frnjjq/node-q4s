@@ -41,8 +41,8 @@ const Options = {
     negotiationPingUp: 20,
     negotiationPingDown: 20,
     negotiationBandwidth: 5,
-    continuityPingUp:20,
-    continuityPingDown:20,
+    continuityPingUp:10,
+    continuityPingDown:10,
     windowSizeUp:255,
     windowSizeDown:255,
     windowSizePctLssUp:255,
@@ -75,6 +75,10 @@ server.on('connected', (sessionId, ip) => {
 // Event fired when the client connects to the server.
 server.on('completed', (sessionId, ip) => {
   console.log('Completed initial measures');
+});
+
+server.on('measure', (measure) => {
+  console.log(measure);
 });
 
 // Event fired when the q4s session is fnished, by any mean.

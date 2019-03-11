@@ -67,6 +67,9 @@ client.on('completed', (appURI) => {
 client.on('end', () => {
   console.log('Finished session, either by server or client');
 });
+client.on('measure', (measure) => {
+  console.log(measure);
+});
 
 client.importClientOps(Options).then( ()=> {
   // Call connect with the host and port parameters.
