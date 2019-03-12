@@ -33,6 +33,7 @@
   "dependencies": {
     "ip": "^1.1.5",
     "lokijs": "^1.5.6",
+    "nanotimer": "^0.3.15",
     "public-ip": "^3.0.0"
   }
 }
