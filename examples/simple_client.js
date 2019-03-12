@@ -67,8 +67,13 @@ client.on('completed', (appURI) => {
 client.on('end', () => {
   console.log('Finished session, either by server or client');
 });
+let count = 0;
 client.on('measure', (measure) => {
-  console.log(measure);
+  if(count%100 === 0){
+    console.log(measure);
+  }
+  count++;
+  
 });
 
 client.importClientOps(Options).then( ()=> {

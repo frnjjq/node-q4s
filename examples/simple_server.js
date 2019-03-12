@@ -41,12 +41,12 @@ const Options = {
     negotiationPingUp: 20,
     negotiationPingDown: 20,
     negotiationBandwidth: 5,
-    continuityPingUp:10,
-    continuityPingDown:10,
-    windowSizeUp:255,
-    windowSizeDown:255,
-    windowSizePctLssUp:255,
-    windowSizePctLssDown:255
+    continuityPingUp:40,
+    continuityPingDown:40,
+    windowSizeUp:25,
+    windowSizeDown:25,
+    windowSizePctLssUp:25,
+    windowSizePctLssDown:25
   },
   ip: 'private',
   // Select the handshake TCP local port .
@@ -76,9 +76,13 @@ server.on('connected', (sessionId, ip) => {
 server.on('completed', (sessionId, ip) => {
   console.log('Completed initial measures');
 });
-
+let count = 0;
 server.on('measure', (measure) => {
-  console.log(measure);
+  if(count%100 === 0){
+    console.log(measure);
+  }
+  count++;
+  
 });
 
 // Event fired when the q4s session is fnished, by any mean.
