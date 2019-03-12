@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: measurement-set.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: measurement-set.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ * Implements the MeasurementSet Class.
+ * @module measurement-set
+ * @license Apache-2.0
+ */
+
+/**
+ * Represents a complete q4s session quality measures. This class contains
+ * methods to serve as reference quality metric. Contains too methods that
+ * allow to map server and client measures into a session set of measures.
+ */
+class MeasurementSet {
+  /**
+   * Constructor for the MeasurementSet class. Does not validate input data
+   * coherence. Simply sets the passed data into the object.
+   * @param {Number} latency - RTT latency. ms
+   * @param {Number} jitterUp - Jitter in the uplink. ms
+   * @param {Number} jitterDown - Jitter in the downlink.ms
+   * @param {Number} bandwidthUp - Bandwidth in the uplink. kbits/s
+   * @param {Number} bandwidthDown - Bandwidth in the downlink. kbits/s
+   * @param {Number} packetlossUp - Packet loss in the uplink. Probability.
+   * @param {Number} packetlossDown - Packet loss in the downlink. Probability.
+   */
+  constructor(latency, jitterUp, jitterDown, bandwidthUp, bandwidthDown,
+      packetlossUp, packetlossDown) {
+    /**
+     * RTT latency. ms
+     * @member {Number}
+     */
+    this.latency = latency;
+    /**
+     * Jitter in the uplink. ms
+     * @member {Number}
+     */
+    this.jitterUp = jitterUp;
+    /**
+     * Jitter in the downlink.ms
+     * @member {Number}
+     */
+    this.jitterDown = jitterDown;
+    /**
+     * Bandwidth in the uplink. kbits/s
+     * @member {Number}
+     */
+    this.bandwidthUp = bandwidthUp;
+    /**
+     * Bandwidth in the downlink. kbits/s
+     * @member {Number}
+     */
+    this.bandwidthDown = bandwidthDown;
+    /**
+     * Packet loss in the uplink. Probability.
+     * @member {Number}
+     */
+    this.packetlossUp = packetlossUp;
+    /**
+     * Packet loss in the downlink. Probability.
+     * @member {Number}
+     */
+    this.packetlossDown = packetlossDown;
+  }
+
+  /**
+   * Given another instance of MeasurementSet check those measures with this
+   * object as reference.
+   * @param {MeasurementSet} measurement - Measures to be checked.
+   * @return {bool} True if the requirements where fullfilled false otherwise
+   */
+  doesMetQuality(measurement) {
+    if (typeof this.latency !== 'undefined'&amp;&amp;
+      typeof measurement.latency !== 'undefined' &amp;&amp;
+      measurement.latency > this.latency) {
+      return false;
+    }
+    if (typeof this.jitterUp !== 'undefined'&amp;&amp;
+      typeof measurement.jitterUp !== 'undefined' &amp;&amp;
+      measurement.jitterUp > this.jitterUp) {
+      return false;
+    }
+    if (typeof this.jitterDown !== 'undefined'&amp;&amp;
+      typeof measurement.jitterDown !== 'undefined' &amp;&amp;
+      measurement.jitterDown > this.jitterDown) {
+      return false;
+    }
+    if (typeof this.bandwidthUp !== 'undefined'&amp;&amp;
+      typeof measurement.bandwidthUp !== 'undefined' &amp;&amp;
+      measurement.bandwidthUp &lt; this.bandwidthUp) {
+      return false;
+    }
+    if (typeof this.bandwidthDown !== 'undefined'&amp;&amp;
+      typeof measurement.bandwidthDown !== 'undefined' &amp;&amp;
+      measurement.bandwidthDown &amp;&amp;
+      measurement.bandwidthDown &lt; this.bandwidthDown) {
+      return false;
+    }
+    if (typeof this.packetlossUp !== 'undefined'&amp;&amp;
+      typeof measurement.packetlossUp !== 'undefined' &amp;&amp;
+      measurement.packetlossUp > this.packetlossUp) {
+      return false;
+    }
+    if (typeof this.packetlossDown !== 'undefined'&amp;&amp;
+      typeof measurement.packetlossDown !== 'undefined' &amp;&amp;
+      measurement.packetlossDown > this.packetlossDown) {
+      return false;
+    }
+    return true;
+  }
+
+  /**
+   * Parses a string finding sdp attributes related to mesurement levels. If
+   * any attribute is found parsing the string, the object gets updated with
+   * the parsed value.
+   * @param {String} sdp - Contains one or more sdp atttributes.
+   */
+  updateWithSDP(sdp) {
+    const lines = sdp.split('\r\n');
+    lines.forEach((line) => {
+      if (line.indexOf('a=latency:') === 0) {
+        const res = parseInt(line.substring(10), 10);
+        if (!isNaN(res) &amp;&amp; res !== 0) {
+          this.latency = res;
+        }
+      } else if (line.indexOf('a=jitter:') === 0) {
+        const aux = line.substring(9).split('/');
+        let res = parseInt(aux[0], 10);
+        if (!isNaN(res) &amp;&amp; res !== 0) {
+          this.jitterUp = res;
+        }
+        res = parseInt(aux[1], 10);
+        if (!isNaN(res) &amp;&amp; res !== 0) {
+          this.jitterDown = res;
+        }
+      } else if (line.indexOf('a=bandwidth:') === 0) {
+        const aux = line.substring(12).split('/');
+        let res = parseInt(aux[0], 10);
+        if (!isNaN(res) &amp;&amp; res !== 0) {
+          this.bandwidthUp = res;
+        }
+        res = parseInt(aux[1], 10);
+        if (!isNaN(res) &amp;&amp; res !== 0) {
+          this.bandwidthDown = res;
+        }
+      } else if (line.indexOf('a=packetloss:') === 0) {
+        const aux = line.substring(13).split('/');
+        let res = parseFloat(aux[0], 10);
+        if (!isNaN(res) &amp;&amp; res !== 0) {
+          this.packetlossUp = res;
+        }
+        res = parseFloat(aux[1], 10);
+        if (!isNaN(res) &amp;&amp; res !== 0) {
+          this.packetlossDown = res;
+        }
+      }
+    });
+  }
+
+  /**
+   * Returns a string form of the information in this object. This view is
+   * intended to be included inside an sdp.
+   * @return {String} - The SDP attributes.
+   */
+  toSDPAttr() {
+    let lines;
+    if (this.latency) {
+      lines = 'a=latency:' + this.latency + '\r\n';
+    }
+    if (this.jitterDown &amp;&amp; this.jitterUp) {
+      lines = lines + 'a=jitter:' + this.jitterUp + '/' +
+        this.jitterDown + '\r\n';
+    }
+    if (this.bandwidthUp &amp;&amp; this.bandwidthDown) {
+      lines = lines + 'a=bandwidth:' + this.bandwidthUp + '/' +
+        this.bandwidthDown + '\r\n';
+    }
+    if (this.packetlossUp &amp;&amp; this.packetlossDown) {
+      lines = lines + 'a=packetloss:' + this.packetlossUp + '/' +
+        this.packetlossDown + '\r\n';
+    }
+    return lines;
+  }
+
+  /**
+   * Import a measure generated by the client. The imported measure overrrides
+   * the current attributes.
+   * @argument {Measure} measure - A client measure.
+   */
+  introduceClientMeasures(measure) {
+    if (typeof this.latency === 'undefined' &amp;&amp;
+      typeof measure.latency !== 'undefined') {
+      this.latency = measure.latency;
+    }
+    if (typeof measure.jitter !== 'undefined') {
+      this.jitterUp = measure.jitter;
+    }
+    if (typeof measure.packetLoss !== 'undefined') {
+      this.packetlossUp = measure.packetLoss;
+    }
+    if (typeof measure.bandwidth !== 'undefined') {
+      this.bandwidthUp = measure.bandwidth;
+    }
+  }
+
+  /**
+   * Import a measure generated by the server. The imported measure overrrides
+   * the current attributes.
+   * @argument {Measure} measure - A server measure.
+   */
+  introduceServerMeasures(measure) {
+    if (typeof measure.latency !== 'undefined') {
+      this.latency = measure.latency;
+    }
+    if (typeof measure.jitter !== 'undefined') {
+      this.jitterDown = measure.jitter;
+    }
+    if (typeof measure.packetLoss !== 'undefined') {
+      this.packetlossDown = measure.packetLoss;
+    }
+    if (typeof measure.bandwidth !== 'undefined') {
+      this.bandwidthDown = measure.bandwidth;
+    }
+  }
+
+  /**
+   * Determines if continuity bandwidth measurements are required, given the
+   * object as a reference metrics.
+   * @return {Boolean} - True if required otherwise false
+   */
+  requireReady1() {
+    if (this.bandwidthUp || this.bandwidthDown) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  /**
+   * Given an object wich contains maximum and minimum possible values. The
+   * attributes of this object are constrained between maximum and minimum
+   * values.
+   * @argument {Object} constr
+   * @argument {Number} constr.latency.max
+   * @argument {Number} constr.latency.min
+   * @argument {Number} constr.jitterUp.max
+   * @argument {Number} constr.jitterUp.min
+   * @argument {Number} constr.jitterDown.max
+   * @argument {Number} constr.jitterDown.min
+   * @argument {Number} constr.bandwidthUp.max
+   * @argument {Number} constr.bandwidthUp.min
+   * @argument {Number} constr.bandwidthDown.max
+   * @argument {Number} constr.bandwidthDown.min
+   * @argument {Number} constr.packetlossUp.max
+   * @argument {Number} constr.packetlossUp.min
+   * @argument {Number} constr.packetlossDown.max
+   * @argument {Number} constr.packetlossDown.min
+   */
+  constrain(constr) {
+    // TODO -> Validate this function, so weird values do not destroy.
+    const check = function(parameter, restr, maxDefault) {
+      let value;
+      if (parameter &amp;&amp; restr) {
+        if (restr.max &amp;&amp; restr.min) {
+          value = parameter > restr.max ?
+            restr.max : parameter &lt; restr.min ?
+              restr.min : parameter;
+        } else if (restr.max) {
+          value = parameter > restr.max ? restr.max : parameter;
+        } else if (restr.min) {
+          value = parameter &lt; restr.min ? restr.min : parameter;
+        } else {
+          value = parameter;
+        }
+      } else if (restr) {
+        if (restr.max &amp;&amp; maxDefault) {
+          value = max;
+        } else if (restr.min) {
+          value = min;
+        } else {
+          value = undefined;
+        }
+      } else if (parameter) {
+        value = parameter;
+      } else {
+        value = undefined;
+      }
+      return value;
+    };
+    this.latency = check(this.latency, constr.latency, true);
+    this.jitterUp = check(this.jitterUp, constr.jitterUp, true);
+    this.jitterDown = check(this.jitterDown, constr.jitterDown, true);
+    this.bandwidthUp = check(this.bandwidthUp, constr.bandwidthUp, false);
+    this.bandwidthDown = check(this.bandwidthDown, constr.bandwidthDown, false);
+    this.packetlossUp = check(this.packetlossUp, constr.packetlossUp, true);
+    this.packetlossDown = check(this.packetlossDown, constr.packetlossDown,
+        true);
+  }
+}
+
+module.exports = MeasurementSet;
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-addreses.html">addreses</a></li><li><a href="module-bandwidther.html">bandwidther</a></li><li><a href="module-ClientNetwork.html">ClientNetwork</a></li><li><a href="module-ClientQ4S.html">ClientQ4S</a></li><li><a href="module-continuity-pinger.html">continuity-pinger</a></li><li><a href="module-default-procedure.html">default-procedure</a></li><li><a href="module-measure.html">measure</a></li><li><a href="module-measurement-set.html">measurement-set</a></li><li><a href="module-pinger.html">pinger</a></li><li><a href="module-ReqQ4S.html">ReqQ4S</a></li><li><a href="module-ResQ4S.html">ResQ4S</a></li><li><a href="module-server-network.html">server-network</a></li><li><a href="module-Session.html">Session</a></li><li><a href="module-Util.html">Util</a></li></ul><h3>Classes</h3><ul><li><a href="module-addreses-Addresses.html">Addresses</a></li><li><a href="module-bandwidther-Bandwidther.html">Bandwidther</a></li><li><a href="module-ClientNetwork-ClientNetwork.html">ClientNetwork</a></li><li><a href="module-ClientQ4S-ClientQ4S.html">ClientQ4S</a></li><li><a href="module-continuity-pinger-ContinuityPinger.html">ContinuityPinger</a></li><li><a href="module-default-procedure-DefaultProcedure.html">DefaultProcedure</a></li><li><a href="module-measurement-set-MeasurementSet.html">MeasurementSet</a></li><li><a href="module-measure-Measure.html">Measure</a></li><li><a href="module-pinger-Pinger.html">Pinger</a></li><li><a href="module-ReqQ4S-ReqQ4S.html">ReqQ4S</a></li><li><a href="module-ResQ4S-ResQ4S.html">ResQ4S</a></li><li><a href="module-server-network-ServerNetwork.html">ServerNetwork</a></li><li><a href="module-Session-Session.html">Session</a></li><li><a href="ServerQ4S.html">ServerQ4S</a></li></ul><h3>Events</h3><ul><li><a href="module-server-network.html#~event:handshake-Req">handshake-Req</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Tue Mar 12 2019 21:06:44 GMT+0100 (Central European Standard Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

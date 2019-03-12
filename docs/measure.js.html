@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: measure.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: measure.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ * Module which implements the class Measurement which includes the four
+ * parameters that are measured in Q4S.
+ * @module measure
+ */
+
+/** Measurement Class*/
+class Measure {
+  /**
+   * Constructor for the Measurement.
+   * @param {Number} latency - Latency in ms
+   * @param {Number} jitter - Jitter in ms
+   * @param {Number} bandwidth - bandwidth in ms
+   * @param {Number} packetLoss - packetLoss
+
+   */
+  constructor(latency, jitter, bandwidth, packetLoss) {
+    /**
+     * Latency in ms
+     * @member {Number}
+     */
+    this.latency = latency;
+    /**
+     * Jitter in ms
+     * @member {Number}
+     */
+    this.jitter = jitter;
+    /**
+     * Bandwidth in kbps kilo bits per second
+     * @member {Number}
+     */
+    this.bandwidth = bandwidth;
+    /**
+     * Packet Loss in probability 0 to 1
+     * @member {Number}
+     */
+    this.packetLoss = packetLoss;
+  }
+
+  /**
+   * Extract the text view of this object to be included in headers.
+   * @return {String} The header representation of tose measurements.
+   */
+  toHeader() {
+    let header = 'l=';
+    if (typeof this.latency !== 'undefined') {
+      header = header + this.latency;
+    }
+    header = header + ', j=';
+    if (typeof this.jitter !== 'undefined') {
+      header = header + this.jitter;
+    }
+    header = header + ', pl=';
+    if (typeof this.packetLoss !== 'undefined') {
+      header = header + this.packetLoss;
+    }
+    header = header + ', bw=';
+    if (typeof this.bandwidth !== 'undefined') {
+      header = header + this.bandwidth;
+    }
+    return header;
+  }
+
+  /**
+   * Fill this object with contents from a text header.
+   * @param {String} hdr - Header line to extract the text from.
+   */
+  fromHeader(hdr) {
+    const latencyReg = /^l=\d+(\.\d+)?/;
+    const jitterReg = /^j=\d+(\.\d+)?/;
+    const packetLossReg = /^pl=[0-1]+(\.\d+)?/;
+    const bandwidthReg = /^bw=\d+(\.\d+)?/;
+
+    const parts = hdr.split(', ');
+
+    parts.forEach((element) => {
+      if (latencyReg.test(element)) {
+        this.latency = parseFloat(element.substring(2));
+      } else if (jitterReg.test(element)) {
+        this.jitter = parseFloat(element.substring(2));
+      } else if (packetLossReg.test(element)) {
+        this.packetLoss = parseFloat(element.substring(3));
+      } else if (bandwidthReg.test(element)) {
+        this.bandwidth = parseFloat(element.substring(3));
+      }
+    });
+  }
+
+  /**
+   * Fill the jitter attribute with an Array of dates. Those dates are the
+   * arrival dates of packets. The array is expected to be filled with zeroes
+   * in the empty spaces thata re not used. The lenght considered is up to the
+   * last not zero value.
+   * @param {Object[]} reqTime
+   * @param {Number} reqTime.seq
+   * @param {Date} reqTime.time
+   */
+  extractJitter(reqTime) {
+    reqTime.sort((a, b) => {
+      return a.seq - b.seq;
+    });
+    let acum = 0;
+    let size = 0;
+    let diff = 0;
+    for (let i = 1; i &lt; reqTime.length; i++) {
+      if (reqTime[i].seq == reqTime[i - 1].seq + 1) {
+        acum = acum + reqTime[i].time.getTime() - reqTime[i - 1].time.getTime();
+        size++;
+      }
+    }
+    const averageTime = acum / size;
+
+    acum = 0;
+    for (let i = 1; i &lt; reqTime.length; i++) {
+      if (reqTime[i].seq == reqTime[i - 1].seq + 1) {
+        diff = reqTime[i].time.getTime() - reqTime[i - 1].time.getTime();
+        acum = acum + Math.abs(diff - averageTime);
+      }
+    }
+    if (size !== 0) {
+      this.jitter = acum / size;
+    }
+  }
+
+  /**
+   * Fill the packet loss and latency attribute with an Array of dates. Those
+   * dates are thedeparture of the packet and the time of ariva of the
+   * corresponding response. The array is expected to be filled with zeroes
+   * in the empty spaces thata re not used. The lenght considered is up to the
+   * last not zero value.
+   * @param {Object[]} departureTime
+   * @param {Number} departureTime.seq
+   * @param {Date} departureTime.time
+   * @param {Object[]} arrivalTime
+   * @param {Number} arrivalTime.seq
+   * @param {Date} arrivalTime.time
+   */
+  extractLatency(departureTime, arrivalTime) {
+    arrivalTime.sort((a, b) => {
+      return a.seq - b.seq;
+    });
+    let acum = 0;
+    let lost = 0;
+    for (let i = 0; i &lt; departureTime.length; i++) {
+      let isFound = false;
+      for (let j = i - lost; j &lt; arrivalTime.length; j++) {
+        if (departureTime[i].seq == arrivalTime[j].seq) {
+          acum = acum +
+          arrivalTime[j].time.getTime() -
+          departureTime[i].time.getTime();
+          isFound = true;
+          break;
+        }
+      }
+      if (!isFound) {
+        lost++;
+      }
+    }
+    this.latency = acum / arrivalTime.length;
+    this.packetLoss = lost / departureTime.length;
+  }
+
+  /**
+   * From recieved in bandwidth measurement.
+   * @param {Number[]} arrivedMessages - The sending times
+   * @param {Number} expectedBandwidth - The targeted bandwidth
+   */
+  extractBandwidth(arrivedMessages, expectedBandwidth) {
+    const size = arrivedMessages.length;
+    if (size > 0) {
+      const maxSeq = arrivedMessages.reduce((prev, curr) => {
+        return prev > curr ? prev : curr;
+      });
+      const recievedPercentage = size / (maxSeq + 1);
+      this.packetLoss = 1 - recievedPercentage;
+      this.bandwidth = expectedBandwidth * recievedPercentage;
+    }
+  }
+}
+
+module.exports = Measure;
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-addreses.html">addreses</a></li><li><a href="module-bandwidther.html">bandwidther</a></li><li><a href="module-ClientNetwork.html">ClientNetwork</a></li><li><a href="module-ClientQ4S.html">ClientQ4S</a></li><li><a href="module-continuity-pinger.html">continuity-pinger</a></li><li><a href="module-default-procedure.html">default-procedure</a></li><li><a href="module-measure.html">measure</a></li><li><a href="module-measurement-set.html">measurement-set</a></li><li><a href="module-pinger.html">pinger</a></li><li><a href="module-ReqQ4S.html">ReqQ4S</a></li><li><a href="module-ResQ4S.html">ResQ4S</a></li><li><a href="module-server-network.html">server-network</a></li><li><a href="module-Session.html">Session</a></li><li><a href="module-Util.html">Util</a></li></ul><h3>Classes</h3><ul><li><a href="module-addreses-Addresses.html">Addresses</a></li><li><a href="module-bandwidther-Bandwidther.html">Bandwidther</a></li><li><a href="module-ClientNetwork-ClientNetwork.html">ClientNetwork</a></li><li><a href="module-ClientQ4S-ClientQ4S.html">ClientQ4S</a></li><li><a href="module-continuity-pinger-ContinuityPinger.html">ContinuityPinger</a></li><li><a href="module-default-procedure-DefaultProcedure.html">DefaultProcedure</a></li><li><a href="module-measurement-set-MeasurementSet.html">MeasurementSet</a></li><li><a href="module-measure-Measure.html">Measure</a></li><li><a href="module-pinger-Pinger.html">Pinger</a></li><li><a href="module-ReqQ4S-ReqQ4S.html">ReqQ4S</a></li><li><a href="module-ResQ4S-ResQ4S.html">ResQ4S</a></li><li><a href="module-server-network-ServerNetwork.html">ServerNetwork</a></li><li><a href="module-Session-Session.html">Session</a></li><li><a href="ServerQ4S.html">ServerQ4S</a></li></ul><h3>Events</h3><ul><li><a href="module-server-network.html#~event:handshake-Req">handshake-Req</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Tue Mar 12 2019 21:06:44 GMT+0100 (Central European Standard Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

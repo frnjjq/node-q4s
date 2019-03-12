@@ -67,7 +67,7 @@ Please read [CONTRIBUTING.md](https://github.com/frnjjq/node-q4s/blob/master/CON
 We use [SemVer](http://semver.org/) for versioning. For the versions available, see the [tags on this repository](https://github.com/frnjjq/node-q4s/tags). 
 
 ## Known Bugs and Gotchas
-- Due the Javscript event queue bloquing, the jitter measures may be bigger than the actual values.
+- Due the Javscript event queue bloquing, measures may be bigger than the actual values.The more conservative the timing configuration is the better it works.
 
 ## Authors
 
