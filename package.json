@@ -28,6 +28,7 @@
     "eslint-config-google": "^0.11.0",
     "faker": "^4.1.0",
     "jest": "^24.1.0",
+    "jest-cli": "^25.1.0",
     "jsdoc": "^3.6.3"
   },
   "dependencies": {
